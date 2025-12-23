@@ -1,5 +1,5 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
-import { useAuth } from "react-oidc-context";
+import { useAuth } from "../hooks/useAuth";
 import { useEffect } from "react";
 import MobileHeader from "../components/MobileHeader";
 import MobileFooter from "../components/MobileFooter";
@@ -7,14 +7,11 @@ import { type RouterContext } from "./__root";
 
 export const Route = createFileRoute('/_auth')({
     beforeLoad: ({ context }) => {
-        const authContext = context as RouterContext;
+        const { auth } = context as RouterContext;
         // Only redirect if we are sure the user is NOT authenticated and NOT loading
-        if (!authContext.auth.isLoading && !authContext.auth.isAuthenticated) {
+        if (!auth.isLoading && !auth.isAuthenticated) {
             throw redirect({
                 to: '/',
-                search: {
-                    // redirect: location.href,
-                },
             })
         }
     },
@@ -26,10 +23,9 @@ function AuthLayout() {
   
   useEffect(() => {
     if (!auth.isLoading && !auth.isAuthenticated) {
-        // Double check in component effect to catch cases where state changes after beforeLoad
-         auth.signinRedirect();
+         auth.originalAuth.signinRedirect();
     }
-  }, [auth.isLoading, auth.isAuthenticated, auth.signinRedirect]);
+  }, [auth.isLoading, auth.isAuthenticated, auth.originalAuth]);
 
   if (auth.isLoading) {
       return (

@@ -1,7 +1,7 @@
 import { StrictMode } from "react";
 import ReactDOM from "react-dom/client";
 import { RouterProvider, createRouter } from "@tanstack/react-router";
-import { AuthProvider, useAuth } from "react-oidc-context";
+import { AuthProvider } from "react-oidc-context";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { oidcConfig } from "./auth/authConfig";
 import { routeTree } from "./routeTree.gen";
@@ -31,6 +31,8 @@ declare module "@tanstack/react-router" {
     context: RouterContext;
   }
 }
+
+import { useAuth } from "./hooks/useAuth";
 
 /**
  * This is our "bridge" component. It's rendered inside AuthProvider,

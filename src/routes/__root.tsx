@@ -1,10 +1,10 @@
 import { createRootRoute, Outlet } from "@tanstack/react-router";
 // import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 // import  TanStackDevtools } from "@tanstack/react-devtools";
-import { type AuthContextProps } from "react-oidc-context";
+import { type useAuth } from "../hooks/useAuth";
 
 export interface RouterContext {
-  auth: AuthContextProps;
+  auth: ReturnType<typeof useAuth>;
 }
 
 export const Route = createRootRoute<RouterContext>({
