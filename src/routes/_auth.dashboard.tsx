@@ -22,7 +22,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertTriangle, Users } from "lucide-react";
 
-export const Route = createFileRoute("/dashboard/")({
+export const Route = createFileRoute("/_auth/dashboard")({
   component: DashboardComponent,
 });
 
@@ -53,6 +53,7 @@ function DashboardLoadingSkeleton() {
 
 function DashboardComponent() {
   const auth = useAuth();
+  debugger
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["myData"],
@@ -111,16 +112,16 @@ function DashboardComponent() {
                 ))
               ) : (
                 // This is the new empty state
-                <TableRow>
+                (<TableRow>
                   <TableCell colSpan={5} className="h-24 text-center">
                     No data available.
                   </TableCell>
-                </TableRow>
+                </TableRow>)
               )}
             </TableBody>
           </Table>
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }

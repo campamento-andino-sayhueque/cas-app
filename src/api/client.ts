@@ -2,16 +2,13 @@ import axios from "axios";
 import { User, UserManager } from "oidc-client-ts";
 import { oidcConfig } from "../auth/authConfig";
 
-// Read API base URL from environment variables
-const baseURL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
-
 const userManager = new UserManager(oidcConfig);
 
-const api = axios.create({
-  baseURL,
+export const client = axios.create({
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api',
 });
 
-api.interceptors.request.use(
+client.interceptors.request.use(
   async (config) => {
     const user: User | null = await userManager.getUser();
 
@@ -26,4 +23,10 @@ api.interceptors.request.use(
   },
 );
 
-export default api;
+client.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    // Handle auth errors etc
+    return Promise.reject(error);
+  }
+);

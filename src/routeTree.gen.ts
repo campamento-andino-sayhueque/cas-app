@@ -10,72 +10,165 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as CallbackRouteImport } from './routes/callback'
-import { Route as DashboardRouteRouteImport } from './routes/dashboard/route'
-import { Route as publicRouteRouteImport } from './routes/(public)/route'
-import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
-import { Route as publicIndexRouteImport } from './routes/(public)/index'
+import { Route as AuthRouteImport } from './routes/_auth'
+import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthPlanesRouteImport } from './routes/_auth.planes'
+import { Route as AuthPerfilRouteImport } from './routes/_auth.perfil'
+import { Route as AuthPagosRouteImport } from './routes/_auth.pagos'
+import { Route as AuthGruposRouteImport } from './routes/_auth.grupos'
+import { Route as AuthDefinicionPlanesRouteImport } from './routes/_auth.definicion-planes'
+import { Route as AuthDashboardRouteImport } from './routes/_auth.dashboard'
+import { Route as AuthCarpasRouteImport } from './routes/_auth.carpas'
+import { Route as AuthCalendarioRouteImport } from './routes/_auth.calendario'
+import { Route as AuthAcampantesRouteImport } from './routes/_auth.acampantes'
 
 const CallbackRoute = CallbackRouteImport.update({
   id: '/callback',
   path: '/callback',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DashboardRouteRoute = DashboardRouteRouteImport.update({
+const AuthRoute = AuthRouteImport.update({
+  id: '/_auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthPlanesRoute = AuthPlanesRouteImport.update({
+  id: '/planes',
+  path: '/planes',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthPerfilRoute = AuthPerfilRouteImport.update({
+  id: '/perfil',
+  path: '/perfil',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthPagosRoute = AuthPagosRouteImport.update({
+  id: '/pagos',
+  path: '/pagos',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthGruposRoute = AuthGruposRouteImport.update({
+  id: '/grupos',
+  path: '/grupos',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthDefinicionPlanesRoute = AuthDefinicionPlanesRouteImport.update({
+  id: '/definicion-planes',
+  path: '/definicion-planes',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthDashboardRoute = AuthDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthRoute,
 } as any)
-const publicRouteRoute = publicRouteRouteImport.update({
-  id: '/(public)',
-  getParentRoute: () => rootRouteImport,
+const AuthCarpasRoute = AuthCarpasRouteImport.update({
+  id: '/carpas',
+  path: '/carpas',
+  getParentRoute: () => AuthRoute,
 } as any)
-const DashboardIndexRoute = DashboardIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => DashboardRouteRoute,
+const AuthCalendarioRoute = AuthCalendarioRouteImport.update({
+  id: '/calendario',
+  path: '/calendario',
+  getParentRoute: () => AuthRoute,
 } as any)
-const publicIndexRoute = publicIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => publicRouteRoute,
+const AuthAcampantesRoute = AuthAcampantesRouteImport.update({
+  id: '/acampantes',
+  path: '/acampantes',
+  getParentRoute: () => AuthRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/dashboard': typeof DashboardRouteRouteWithChildren
+  '/': typeof IndexRoute
   '/callback': typeof CallbackRoute
-  '/': typeof publicIndexRoute
-  '/dashboard/': typeof DashboardIndexRoute
+  '/acampantes': typeof AuthAcampantesRoute
+  '/calendario': typeof AuthCalendarioRoute
+  '/carpas': typeof AuthCarpasRoute
+  '/dashboard': typeof AuthDashboardRoute
+  '/definicion-planes': typeof AuthDefinicionPlanesRoute
+  '/grupos': typeof AuthGruposRoute
+  '/pagos': typeof AuthPagosRoute
+  '/perfil': typeof AuthPerfilRoute
+  '/planes': typeof AuthPlanesRoute
 }
 export interface FileRoutesByTo {
+  '/': typeof IndexRoute
   '/callback': typeof CallbackRoute
-  '/': typeof publicIndexRoute
-  '/dashboard': typeof DashboardIndexRoute
+  '/acampantes': typeof AuthAcampantesRoute
+  '/calendario': typeof AuthCalendarioRoute
+  '/carpas': typeof AuthCarpasRoute
+  '/dashboard': typeof AuthDashboardRoute
+  '/definicion-planes': typeof AuthDefinicionPlanesRoute
+  '/grupos': typeof AuthGruposRoute
+  '/pagos': typeof AuthPagosRoute
+  '/perfil': typeof AuthPerfilRoute
+  '/planes': typeof AuthPlanesRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/(public)': typeof publicRouteRouteWithChildren
-  '/dashboard': typeof DashboardRouteRouteWithChildren
+  '/': typeof IndexRoute
+  '/_auth': typeof AuthRouteWithChildren
   '/callback': typeof CallbackRoute
-  '/(public)/': typeof publicIndexRoute
-  '/dashboard/': typeof DashboardIndexRoute
+  '/_auth/acampantes': typeof AuthAcampantesRoute
+  '/_auth/calendario': typeof AuthCalendarioRoute
+  '/_auth/carpas': typeof AuthCarpasRoute
+  '/_auth/dashboard': typeof AuthDashboardRoute
+  '/_auth/definicion-planes': typeof AuthDefinicionPlanesRoute
+  '/_auth/grupos': typeof AuthGruposRoute
+  '/_auth/pagos': typeof AuthPagosRoute
+  '/_auth/perfil': typeof AuthPerfilRoute
+  '/_auth/planes': typeof AuthPlanesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/dashboard' | '/callback' | '/' | '/dashboard/'
+  fullPaths:
+    | '/'
+    | '/callback'
+    | '/acampantes'
+    | '/calendario'
+    | '/carpas'
+    | '/dashboard'
+    | '/definicion-planes'
+    | '/grupos'
+    | '/pagos'
+    | '/perfil'
+    | '/planes'
   fileRoutesByTo: FileRoutesByTo
-  to: '/callback' | '/' | '/dashboard'
+  to:
+    | '/'
+    | '/callback'
+    | '/acampantes'
+    | '/calendario'
+    | '/carpas'
+    | '/dashboard'
+    | '/definicion-planes'
+    | '/grupos'
+    | '/pagos'
+    | '/perfil'
+    | '/planes'
   id:
     | '__root__'
-    | '/(public)'
-    | '/dashboard'
+    | '/'
+    | '/_auth'
     | '/callback'
-    | '/(public)/'
-    | '/dashboard/'
+    | '/_auth/acampantes'
+    | '/_auth/calendario'
+    | '/_auth/carpas'
+    | '/_auth/dashboard'
+    | '/_auth/definicion-planes'
+    | '/_auth/grupos'
+    | '/_auth/pagos'
+    | '/_auth/perfil'
+    | '/_auth/planes'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  publicRouteRoute: typeof publicRouteRouteWithChildren
-  DashboardRouteRoute: typeof DashboardRouteRouteWithChildren
+  IndexRoute: typeof IndexRoute
+  AuthRoute: typeof AuthRouteWithChildren
   CallbackRoute: typeof CallbackRoute
 }
 
@@ -88,64 +181,115 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/dashboard': {
-      id: '/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof DashboardRouteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/(public)': {
-      id: '/(public)'
+    '/_auth': {
+      id: '/_auth'
       path: ''
       fullPath: ''
-      preLoaderRoute: typeof publicRouteRouteImport
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/dashboard/': {
-      id: '/dashboard/'
-      path: '/'
-      fullPath: '/dashboard/'
-      preLoaderRoute: typeof DashboardIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/(public)/': {
-      id: '/(public)/'
+    '/': {
+      id: '/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof publicIndexRouteImport
-      parentRoute: typeof publicRouteRoute
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_auth/planes': {
+      id: '/_auth/planes'
+      path: '/planes'
+      fullPath: '/planes'
+      preLoaderRoute: typeof AuthPlanesRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/perfil': {
+      id: '/_auth/perfil'
+      path: '/perfil'
+      fullPath: '/perfil'
+      preLoaderRoute: typeof AuthPerfilRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/pagos': {
+      id: '/_auth/pagos'
+      path: '/pagos'
+      fullPath: '/pagos'
+      preLoaderRoute: typeof AuthPagosRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/grupos': {
+      id: '/_auth/grupos'
+      path: '/grupos'
+      fullPath: '/grupos'
+      preLoaderRoute: typeof AuthGruposRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/definicion-planes': {
+      id: '/_auth/definicion-planes'
+      path: '/definicion-planes'
+      fullPath: '/definicion-planes'
+      preLoaderRoute: typeof AuthDefinicionPlanesRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/dashboard': {
+      id: '/_auth/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthDashboardRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/carpas': {
+      id: '/_auth/carpas'
+      path: '/carpas'
+      fullPath: '/carpas'
+      preLoaderRoute: typeof AuthCarpasRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/calendario': {
+      id: '/_auth/calendario'
+      path: '/calendario'
+      fullPath: '/calendario'
+      preLoaderRoute: typeof AuthCalendarioRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/acampantes': {
+      id: '/_auth/acampantes'
+      path: '/acampantes'
+      fullPath: '/acampantes'
+      preLoaderRoute: typeof AuthAcampantesRouteImport
+      parentRoute: typeof AuthRoute
     }
   }
 }
 
-interface publicRouteRouteChildren {
-  publicIndexRoute: typeof publicIndexRoute
+interface AuthRouteChildren {
+  AuthAcampantesRoute: typeof AuthAcampantesRoute
+  AuthCalendarioRoute: typeof AuthCalendarioRoute
+  AuthCarpasRoute: typeof AuthCarpasRoute
+  AuthDashboardRoute: typeof AuthDashboardRoute
+  AuthDefinicionPlanesRoute: typeof AuthDefinicionPlanesRoute
+  AuthGruposRoute: typeof AuthGruposRoute
+  AuthPagosRoute: typeof AuthPagosRoute
+  AuthPerfilRoute: typeof AuthPerfilRoute
+  AuthPlanesRoute: typeof AuthPlanesRoute
 }
 
-const publicRouteRouteChildren: publicRouteRouteChildren = {
-  publicIndexRoute: publicIndexRoute,
+const AuthRouteChildren: AuthRouteChildren = {
+  AuthAcampantesRoute: AuthAcampantesRoute,
+  AuthCalendarioRoute: AuthCalendarioRoute,
+  AuthCarpasRoute: AuthCarpasRoute,
+  AuthDashboardRoute: AuthDashboardRoute,
+  AuthDefinicionPlanesRoute: AuthDefinicionPlanesRoute,
+  AuthGruposRoute: AuthGruposRoute,
+  AuthPagosRoute: AuthPagosRoute,
+  AuthPerfilRoute: AuthPerfilRoute,
+  AuthPlanesRoute: AuthPlanesRoute,
 }
 
-const publicRouteRouteWithChildren = publicRouteRoute._addFileChildren(
-  publicRouteRouteChildren,
-)
-
-interface DashboardRouteRouteChildren {
-  DashboardIndexRoute: typeof DashboardIndexRoute
-}
-
-const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
-  DashboardIndexRoute: DashboardIndexRoute,
-}
-
-const DashboardRouteRouteWithChildren = DashboardRouteRoute._addFileChildren(
-  DashboardRouteRouteChildren,
-)
+const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
-  publicRouteRoute: publicRouteRouteWithChildren,
-  DashboardRouteRoute: DashboardRouteRouteWithChildren,
+  IndexRoute: IndexRoute,
+  AuthRoute: AuthRouteWithChildren,
   CallbackRoute: CallbackRoute,
 }
 export const routeTree = rootRouteImport

@@ -1,4 +1,4 @@
-import api from "@/lib/api";
+import { client as api } from "@/api/client";
 
 // This is a single user record from your API
 interface UserData {
