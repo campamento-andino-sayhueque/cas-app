@@ -12,8 +12,11 @@ export function useAuth() {
   const roles = (auth.user?.profile?.roles as string[]) || [];
   const groups = (auth.user?.profile?.groups as string[]) || [];
 
-  const hasRole = useCallback((role: string) => roles.includes(role), [roles]);
-  const hasGroup = useCallback((group: string) => groups.includes(group), [groups]);
+  const hasRole = useCallback((role: string) => 
+    roles.some(r => r.toLowerCase() === role.toLowerCase()), [roles]);
+    
+  const hasGroup = useCallback((group: string) => 
+    groups.some(g => g.toLowerCase() === group.toLowerCase()), [groups]);
 
   const user = auth.user
     ? {
@@ -35,6 +38,6 @@ export function useAuth() {
     error: auth.error,
     hasRole,
     hasGroup,
-    originalAuth: auth // Expose original auth for advanced usage if needed
+    originalAuth: auth 
   };
 }
