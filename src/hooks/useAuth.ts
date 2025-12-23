@@ -24,6 +24,7 @@ export function useAuth() {
     signOut,
     isAuthenticated: auth.isAuthenticated,
     isLoading: auth.isLoading,
+    error: auth.error,
     originalAuth: auth // Expose original auth for advanced usage if needed
   };
 }

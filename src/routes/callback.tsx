@@ -7,28 +7,46 @@ export const Route = createFileRoute("/callback")({
 });
 
 function CallbackComponent() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { error, isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate({ from: "/callback" });
 
   useEffect(() => {
-    // When the auth state is no longer loading and the user is authenticated,
-    // we can safely navigate them to the dashboard.
     if (!isLoading && isAuthenticated) {
+        // Successful login
       navigate({ to: "/dashboard", replace: true });
     }
-
-    // You might also want to handle the case where authentication fails.
-    // For example, if isLoading is false but the user is not authenticated.
-    if (!isLoading && !isAuthenticated) {
-      console.error("Authentication failed after callback.");
-      navigate({ to: "/", replace: true });
+    
+    if (error) {
+        console.error("Auth Callback Error:", error);
     }
-  }, [isAuthenticated, isLoading, navigate]);
+  }, [isAuthenticated, isLoading, navigate, error]);
+
+  if (error) {
+    return (
+        <div className="flex flex-col items-center justify-center min-h-screen p-4">
+            <div className="bg-red-50 text-red-900 p-6 rounded-lg max-w-md w-full border border-red-200">
+                <h3 className="text-lg font-bold mb-2">Error de Autenticación</h3>
+                <p className="mb-4">No se pudo completar el inicio de sesión.</p>
+                <div className="bg-white p-3 rounded border border-red-100 font-mono text-xs mb-4 overflow-auto">
+                    {error.message}
+                </div>
+                <button 
+                    onClick={() => navigate({ to: "/" })}
+                    className="w-full py-2 bg-red-100 hover:bg-red-200 text-red-900 rounded transition-colors"
+                >
+                    Volver al Inicio
+                </button>
+            </div>
+        </div>
+    );
+  }
 
   return (
-    <div className="p-2">
-      <h3>Authenticating...</h3>
-      <p>Please wait while we complete the sign-in process.</p>
+    <div className="flex items-center justify-center min-h-screen">
+      <div className="text-center">
+        <h3 className="text-xl font-semibold mb-2">Completando inicio de sesión...</h3>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
+      </div>
     </div>
   );
 }
