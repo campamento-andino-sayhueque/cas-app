@@ -14,6 +14,7 @@ import {
   union,
   pipe,
   transform,
+  any,
   type InferOutput
 } from 'valibot';
 
@@ -54,7 +55,12 @@ export const PlanPagoSchema = object({
       transform((input) => input.parsedValue)
     )
   ]),
+  moneda: optional(string()), // Added
+  diaVencimiento: optional(number()), // Added
+  montoCuotaFija: optional(number()), // Added
   estrategia: optional(EstrategiaPlanSchema),
+  // Recursively optional planDestino or just any for now to avoid complexity
+  planDestino: optional(any()), 
   minCuotas: optional(number()),
   maxCuotas: optional(number()),
   mesInicio: MonthSchema, 

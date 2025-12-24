@@ -26,6 +26,21 @@ export function usePlanes() {
   };
 }
 
+export function useAdminPlanes() {
+  const query = useQuery({
+    queryKey: [...pagosKeys.planes.todos, 'admin'],
+    queryFn: () => pagosService.listarTodos(),
+    placeholderData: keepPreviousData
+  });
+
+  return {
+    planes: query.data || [],
+    cargando: query.isLoading,
+    error: query.error,
+    refetch: query.refetch
+  };
+}
+
 export function usePlan(id: number | null) {
   const query = useQuery({
     queryKey: pagosKeys.planes.detalle(id!),
@@ -72,6 +87,26 @@ export function useActualizarPlan() {
 
   return {
     actualizarPlan: mutation.mutateAsync,
+    cargando: mutation.isPending,
+    error: mutation.error,
+    reset: mutation.reset
+  };
+}
+
+export function useToggleEstadoPlan() {
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: ({ id, activo }: { id: number; activo: boolean }) => 
+      pagosService.toggleEstado(id, activo),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: pagosKeys.planes.todos });
+      queryClient.invalidateQueries({ queryKey: pagosKeys.planes.detalle(variables.id) });
+    }
+  });
+
+  return {
+    toggleEstado: mutation.mutateAsync,
     cargando: mutation.isPending,
     error: mutation.error,
     reset: mutation.reset

@@ -4,14 +4,18 @@ import { PlusIcon } from 'lucide-react';
 import { Button } from "../components/ui/button";
 import { TablaPlanes } from '../components/pagos/TablaPlanes';
 import { WizardPlanPago } from '../components/pagos/WizardPlanPago';
-import { usePlanes, useCrearPlan } from '../hooks/usePagos';
+import { EditarPlanDialog } from '../components/pagos/EditarPlanDialog';
+import {
+  useAdminPlanes, 
+  useCrearPlan, 
+  useToggleEstadoPlan
+} from '../hooks/usePagos';
 import { type PlanPago, type PlanPagoRequest } from '../api/schemas/pagos';
 import { toast } from 'sonner';
 import { type RouterContext } from './__root';
 
 export const Route = createFileRoute('/_auth/definicion-planes')({
   beforeLoad: ({ context }) => {
-    // Basic check, though sidebar also hides it.
     const { auth } = context as RouterContext;
     const user = auth.user;
     const groups = user?.groups || [];
@@ -23,26 +27,38 @@ export const Route = createFileRoute('/_auth/definicion-planes')({
 });
 
 function RouteComponent() {
-  const { planes, cargando: cargandoPlanes, error } = usePlanes();
+  const { planes, cargando: cargandoPlanes, error } = useAdminPlanes();
   const { crearPlan, cargando: creando } = useCrearPlan();
+  const { toggleEstado } = useToggleEstadoPlan();
   
-  // Update disabled for now as Wizard is simplified for Creation primarily
-  // Editing a plan via Wizard implies re-walking steps. 
-  // We will currently limit Wizard to Creation, or re-use logic.
-  // User request focused on "creating a new plan".
-  
+  // State for Wizard (Creation)
   const [wizardAbierto, setWizardAbierto] = useState(false);
+  
+  // State for Edit Dialog (Modification)
+  const [planEditar, setPlanEditar] = useState<PlanPago | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
 
   const handleNuevoPlan = () => {
     setWizardAbierto(true);
   };
 
-  const handleEditarPlan = (_plan: PlanPago) => {
-       toast.info("Edición via Wizard próximamente. Use 'Nuevo' para crear.");
-       // Ideally passing data to Wizard form defaultValues
+  const handleEditarPlan = (plan: PlanPago) => {
+    setPlanEditar(plan);
+    setEditDialogOpen(true);
+  };
+
+  const handleToggleEstado = async (plan: PlanPago) => {
+    try {
+      if (!plan.id) return;
+      await toggleEstado({ id: plan.id, activo: !plan.activo });
+      toast.success(`Plan ${plan.activo ? 'desactivado' : 'activado'} exitosamente`);
+    } catch (err) {
+      console.error(err);
+      toast.error("Error al cambiar estado del plan");
+    }
   };
   
-  const handleGuardar = async (datos: PlanPagoRequest) => {
+  const handleGuardarNuevo = async (datos: PlanPagoRequest) => {
     try {
         await crearPlan(datos);
         toast.success("Plan creado exitosamente");
@@ -52,6 +68,12 @@ function RouteComponent() {
       toast.error("Error al guardar plan");
     }
   };
+
+  // Note: Edit Dialog handles its own save validation and API call internally via hook, 
+  // but we pass a close handler to refresh or close.
+  // Actually, standard pattern is parenting handles save, but the dialog I wrote handles it self.
+  // Let's check EditarPlanDialog again. Yes, it calls useActualizarPlan internally.
+  // We just need to handle close.
 
   return (
     <div className="p-6 space-y-6">
@@ -74,15 +96,29 @@ function RouteComponent() {
           <TablaPlanes 
               planes={planes} 
               onEditar={handleEditarPlan} 
+              onToggleEstado={handleToggleEstado}
           />
         </div>
       )}
 
-      <WizardPlanPago
-        abierto={wizardAbierto}
-        cargando={creando}
-        onCerrar={() => setWizardAbierto(false)}
-        onGuardar={handleGuardar}
+      {/* Creation Wizard */}
+      {wizardAbierto && (
+        <WizardPlanPago
+          abierto={wizardAbierto}
+          cargando={creando}
+          onCerrar={() => setWizardAbierto(false)}
+          onGuardar={handleGuardarNuevo}
+        />
+      )}
+
+      {/* Edit Dialog */}
+      <EditarPlanDialog 
+        open={editDialogOpen}
+        onClose={() => {
+            setEditDialogOpen(false);
+            setPlanEditar(null);
+        }}
+        plan={planEditar}
       />
     </div>
   );

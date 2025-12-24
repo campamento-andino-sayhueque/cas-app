@@ -75,6 +75,32 @@ export const pagosService = {
     return parse(PlanPagoSchema, response.data);
   },
 
+  /**
+   * Lista TODOS los planes (activos e inactivos) - Solo ADMIN
+   */
+  listarTodos: async (): Promise<PlanPago[]> => {
+    const response = await client.get('/admin/planes');
+    
+    // HATEOAS handling
+    if (response.data?._embedded?.planPagoModels) {
+      return parse(PlanesSchema, response.data._embedded.planPagoModels);
+    }
+    
+    if (Array.isArray(response.data)) {
+      return parse(PlanesSchema, response.data);
+    }
+    
+    return [];
+  },
+
+  /**
+   * Cambia el estado (activo/inactivo) de un plan
+   */
+  toggleEstado: async (id: number, activo: boolean): Promise<PlanPago> => {
+    const response = await client.patch(`/admin/planes/${id}/estado`, { activo });
+    return parse(PlanPagoSchema, response.data);
+  },
+
   // ============================================
   // Gestión de Inscripciones y Pagos (USUARIOS)
   // ============================================

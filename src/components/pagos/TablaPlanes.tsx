@@ -1,7 +1,3 @@
-/**
- * Tabla de Planes de Pago
- */
-
 import {
   Table,
   TableBody,
@@ -12,8 +8,17 @@ import {
 } from "../ui/table";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { type PlanPago } from "../../api/schemas/pagos";
-import { PencilIcon, PowerIcon } from "lucide-react";
+import { PencilIcon, PowerIcon, MoreHorizontal, CalendarIcon } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "../ui/dropdown-menu";
 
 interface TablaPlanesProps {
   planes: PlanPago[];
@@ -22,30 +27,45 @@ interface TablaPlanesProps {
 }
 
 export function TablaPlanes({ planes, onEditar, onToggleEstado }: TablaPlanesProps) {
+  if (planes.length === 0) {
+    return (
+      <div className="text-center py-10 border rounded-md bg-muted/10">
+        <p className="text-muted-foreground">No hay planes configurados.</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="rounded-md border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Código</TableHead>
-            <TableHead>Nombre</TableHead>
-            <TableHead>Año</TableHead>
-            <TableHead>Cuotas</TableHead>
-            <TableHead>Monto Total</TableHead>
-            <TableHead>Vigencia</TableHead>
-            <TableHead>Estado</TableHead>
-            <TableHead className="text-right">Acciones</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {planes.length === 0 ? (
+    <>
+      {/* Mobile View (Cards) */}
+      <div className="md:hidden space-y-4">
+        {planes.map((plan) => (
+          <PlanCard 
+            key={plan.codigo} 
+            plan={plan} 
+            onEditar={onEditar} 
+            onToggleEstado={onToggleEstado} 
+          />
+        ))}
+      </div>
+
+      {/* Desktop View (Table) */}
+      <div className="hidden md:block rounded-md border">
+        <Table>
+          <TableHeader>
             <TableRow>
-              <TableCell colSpan={8} className="h-24 text-center">
-                No hay planes configurados.
-              </TableCell>
+              <TableHead>Código</TableHead>
+              <TableHead>Nombre</TableHead>
+              <TableHead>Año</TableHead>
+              <TableHead>Cuotas</TableHead>
+              <TableHead>Monto Total</TableHead>
+              <TableHead>Vigencia</TableHead>
+              <TableHead>Estado</TableHead>
+              <TableHead className="text-right">Acciones</TableHead>
             </TableRow>
-          ) : (
-            planes.map((plan) => (
+          </TableHeader>
+          <TableBody>
+            {planes.map((plan) => (
               <TableRow key={plan.codigo}>
                 <TableCell className="font-medium">{plan.codigo}</TableCell>
                 <TableCell>{plan.nombre}</TableCell>
@@ -63,32 +83,77 @@ export function TablaPlanes({ planes, onEditar, onToggleEstado }: TablaPlanesPro
                   </Badge>
                 </TableCell>
                 <TableCell className="text-right">
-                  <div className="flex justify-end gap-2">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => onEditar(plan)}
-                    >
-                      <PencilIcon className="h-4 w-4" />
-                    </Button>
-                    {/* Toggle Activado logic could go here if supported by backend */}
-                    {onToggleEstado && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className={plan.activo ? "text-red-500 hover:text-red-700" : "text-green-500 hover:text-green-700"}
-                         onClick={() => onToggleEstado(plan)}
-                      >
-                         <PowerIcon className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
+                  <ActionsMenu plan={plan} onEditar={onEditar} onToggleEstado={onToggleEstado} />
                 </TableCell>
               </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
-    </div>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    </>
+  );
+}
+
+function PlanCard({ plan, onEditar, onToggleEstado }: { plan: PlanPago } & Omit<TablaPlanesProps, 'planes'>) {
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
+        <div className="space-y-1">
+          <CardTitle className="text-base font-semibold">{plan.nombre}</CardTitle>
+          <p className="text-xs text-muted-foreground">{plan.codigo} • {plan.anio}</p>
+        </div>
+        <ActionsMenu plan={plan} onEditar={onEditar} onToggleEstado={onToggleEstado} />
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-2 gap-2 text-sm">
+          <div className="flex flex-col">
+            <span className="text-muted-foreground text-xs">Monto Total</span>
+            <span className="font-medium">${plan.montoTotal.toLocaleString()}</span>
+          </div>
+          <div className="flex flex-col">
+             <span className="text-muted-foreground text-xs">Cuotas</span>
+             <span>{plan.minCuotas === plan.maxCuotas ? plan.maxCuotas : `${plan.minCuotas}-${plan.maxCuotas}`} avail.</span>
+          </div>
+          <div className="col-span-2 flex items-center gap-2 mt-2 pt-2 border-t text-muted-foreground text-xs">
+            <CalendarIcon className="w-3 h-3" />
+            <span>Vigencia: {plan.mesInicio} - {plan.mesFin}</span>
+          </div>
+          <div className="col-span-2 mt-1">
+             <Badge variant={plan.activo ? "default" : "secondary"} className="w-fit">
+                {plan.activo ? "Activo" : "Inactivo"}
+             </Badge>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function ActionsMenu({ plan, onEditar, onToggleEstado }: { plan: PlanPago } & Omit<TablaPlanesProps, 'planes'>) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" className="-mr-2 h-8 w-8 p-0">
+          <span className="sr-only">Abrir menú</span>
+          <MoreHorizontal className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuLabel>Acciones</DropdownMenuLabel>
+        <DropdownMenuItem onClick={() => onEditar(plan)}>
+          <PencilIcon className="mr-2 h-4 w-4" />
+          Editar Plan
+        </DropdownMenuItem>
+        {onToggleEstado && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => onToggleEstado(plan)}>
+              <PowerIcon className="mr-2 h-4 w-4" />
+              {plan.activo ? "Desactivar" : "Activar"}
+            </DropdownMenuItem>
+          </>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
