@@ -10,37 +10,62 @@ import {
   optional,
   array,
   enum_,
+  nullable,
+  union,
+  pipe,
+  transform,
   type InferOutput
 } from 'valibot';
+
+// ============================================
 // Enums
 // ============================================
 
 export enum EstrategiaPlan {
-  CUOTA_FIJA = 'CUOTA_FIJA',
-  MONTO_DIVIDIDO = 'MONTO_DIVIDIDO'
+  PLAN_A = 'PLAN_A',    // Plan principal con descuento
+  PLAN_B = 'PLAN_B'     // Plan contingencia/tardío
 }
 
 export const EstrategiaPlanSchema = enum_(EstrategiaPlan);
 
-// Helper for Java Month enum (backend returns strings like "JANUARY", etc or logic might map int to string)
-// Frontend checks PlanPagoRequest uses 1-12 ints, PlanPagoModel uses Month enum strings.
-// We will use string for model, int for request.
+// Helper for Java Money JSON structure
+const MoneyJsonSchema = object({
+  source: string(),
+  parsedValue: number()
+});
+
+// Helper for Months (can be string 'JULY' or number 7)
+const MonthSchema = union([string(), number()]);
 
 // ============================================
 // Schemas: Plan de Pago (Model / Response)
 // ============================================
 
 export const PlanPagoSchema = object({
-  id: optional(number()), // Added ID
+  id: optional(number()),
   codigo: string(),
   nombre: string(),
   anio: number(),
-  montoTotal: number(),
+  // Transform complex money object to simple number if needed, or accept number directly
+  montoTotal: union([
+    number(), 
+    pipe(
+      MoneyJsonSchema,
+      transform((input) => input.parsedValue)
+    )
+  ]),
+  estrategia: optional(EstrategiaPlanSchema),
   minCuotas: optional(number()),
   maxCuotas: optional(number()),
-  mesInicio: string(), // Month enum string e.g 'MARCH'
-  mesFin: string(),    // Month enum string
+  mesInicio: MonthSchema, 
+  mesFin: MonthSchema,    
   activo: boolean(),
+  // Campos de vinculación Plan A → Plan B
+  planDestinoId: optional(nullable(number())),
+  planDestinoCodigo: optional(nullable(string())),
+  mesInicioControlAtraso: optional(nullable(number())),
+  cuotasMinimasAntesControl: optional(nullable(number())),
+  mesesAtrasoParaTransicion: optional(nullable(number())),
 });
 
 export type PlanPago = InferOutput<typeof PlanPagoSchema>;
@@ -63,6 +88,16 @@ export const PlanPagoRequestSchema = object({
   minCuotas: optional(number()),
   maxCuotas: optional(number()),
   activo: boolean(),
+  
+  // Campos para crear Plan B automáticamente (solo cuando estrategia = PLAN_A)
+  montoTotalPlanB: optional(number()),
+  codigoPlanB: optional(string()),
+  nombrePlanB: optional(string()),
+  
+  // Reglas de transición
+  mesInicioControlAtraso: optional(number()),      // Mes a partir del cual aplica control de atraso (ej: 7 = Julio)
+  cuotasMinimasAntesControl: optional(number()),   // Cuotas mínimas antes del mes de control
+  mesesAtrasoParaTransicion: optional(number()),   // Meses de atraso para activar transición (default: 2)
 });
 
 export type PlanPagoRequest = InferOutput<typeof PlanPagoRequestSchema>;

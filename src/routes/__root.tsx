@@ -1,6 +1,6 @@
 import { createRootRoute, Outlet } from "@tanstack/react-router";
-// import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
-// import  TanStackDevtools } from "@tanstack/react-devtools";
+import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { type useAuth } from "../hooks/useAuth";
 
 export interface RouterContext {
@@ -15,17 +15,8 @@ function RootRouteComponent() {
   return (
     <>
       <Outlet />
-      {/* <TanStackDevtools */}
-      {/*   config={{ */}
-      {/*     position: 'bottom-right', */}
-      {/*   }} */}
-      {/*   plugins={[ */}
-      {/*     { */}
-      {/*       name: 'Tanstack Router', */}
-      {/*       render: <TanStackRouterDevtoolsPanel />, */}
-      {/*     }, */}
-      {/*   ]} */}
-      {/* /> */}
+      <TanStackRouterDevtools />
+      <ReactQueryDevtools />
     </>
   );
 }

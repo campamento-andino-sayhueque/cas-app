@@ -68,7 +68,7 @@ export function ModalPlanPago({
       nombreParaMostrar: "",
       montoTotal: 0,
       moneda: "ARS",
-      estrategia: EstrategiaPlan.CUOTA_FIJA,
+      estrategia: EstrategiaPlan.PLAN_A,
       diaVencimiento: 10,
       montoCuotaFija: 0,
       mesInicioHabilitado: 1,
@@ -189,8 +189,8 @@ export function ModalPlanPago({
                         <SelectValue placeholder="Seleccionar..." />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value={EstrategiaPlan.CUOTA_FIJA}>Cuota Fija (Flexible)</SelectItem>
-                        <SelectItem value={EstrategiaPlan.MONTO_DIVIDIDO}>Monto dividido (Cuotas iguales)</SelectItem>
+                        <SelectItem value={EstrategiaPlan.PLAN_A}>Plan A (Principal)</SelectItem>
+                        <SelectItem value={EstrategiaPlan.PLAN_B}>Plan B (Contingencia)</SelectItem>
                       </SelectContent>
                    </Select>
               </div>
