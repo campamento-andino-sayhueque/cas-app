@@ -13,6 +13,7 @@ import { Route as PagoResultadoRouteImport } from './routes/pago-resultado'
 import { Route as CallbackRouteImport } from './routes/callback'
 import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthTesoreriaRouteImport } from './routes/_auth.tesoreria'
 import { Route as AuthPlanesRouteImport } from './routes/_auth.planes'
 import { Route as AuthPerfilRouteImport } from './routes/_auth.perfil'
 import { Route as AuthPagosRouteImport } from './routes/_auth.pagos'
@@ -41,6 +42,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthTesoreriaRoute = AuthTesoreriaRouteImport.update({
+  id: '/tesoreria',
+  path: '/tesoreria',
+  getParentRoute: () => AuthRoute,
 } as any)
 const AuthPlanesRoute = AuthPlanesRouteImport.update({
   id: '/planes',
@@ -101,6 +107,7 @@ export interface FileRoutesByFullPath {
   '/pagos': typeof AuthPagosRoute
   '/perfil': typeof AuthPerfilRoute
   '/planes': typeof AuthPlanesRoute
+  '/tesoreria': typeof AuthTesoreriaRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -115,6 +122,7 @@ export interface FileRoutesByTo {
   '/pagos': typeof AuthPagosRoute
   '/perfil': typeof AuthPerfilRoute
   '/planes': typeof AuthPlanesRoute
+  '/tesoreria': typeof AuthTesoreriaRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -131,6 +139,7 @@ export interface FileRoutesById {
   '/_auth/pagos': typeof AuthPagosRoute
   '/_auth/perfil': typeof AuthPerfilRoute
   '/_auth/planes': typeof AuthPlanesRoute
+  '/_auth/tesoreria': typeof AuthTesoreriaRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -147,6 +156,7 @@ export interface FileRouteTypes {
     | '/pagos'
     | '/perfil'
     | '/planes'
+    | '/tesoreria'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -161,6 +171,7 @@ export interface FileRouteTypes {
     | '/pagos'
     | '/perfil'
     | '/planes'
+    | '/tesoreria'
   id:
     | '__root__'
     | '/'
@@ -176,6 +187,7 @@ export interface FileRouteTypes {
     | '/_auth/pagos'
     | '/_auth/perfil'
     | '/_auth/planes'
+    | '/_auth/tesoreria'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -214,6 +226,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_auth/tesoreria': {
+      id: '/_auth/tesoreria'
+      path: '/tesoreria'
+      fullPath: '/tesoreria'
+      preLoaderRoute: typeof AuthTesoreriaRouteImport
+      parentRoute: typeof AuthRoute
     }
     '/_auth/planes': {
       id: '/_auth/planes'
@@ -291,6 +310,7 @@ interface AuthRouteChildren {
   AuthPagosRoute: typeof AuthPagosRoute
   AuthPerfilRoute: typeof AuthPerfilRoute
   AuthPlanesRoute: typeof AuthPlanesRoute
+  AuthTesoreriaRoute: typeof AuthTesoreriaRoute
 }
 
 const AuthRouteChildren: AuthRouteChildren = {
@@ -303,6 +323,7 @@ const AuthRouteChildren: AuthRouteChildren = {
   AuthPagosRoute: AuthPagosRoute,
   AuthPerfilRoute: AuthPerfilRoute,
   AuthPlanesRoute: AuthPlanesRoute,
+  AuthTesoreriaRoute: AuthTesoreriaRoute,
 }
 
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)

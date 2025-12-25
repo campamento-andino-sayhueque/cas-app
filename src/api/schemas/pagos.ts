@@ -230,3 +230,89 @@ export const IntencionPagoResponseSchema = object({
 });
 
 export type IntencionPagoResponse = InferOutput<typeof IntencionPagoResponseSchema>;
+
+// ============================================
+// Schemas: Admin / Tesorería
+// ============================================
+
+// States matching backend enums
+export enum EstadoInscripcion {
+  ACTIVA = 'ACTIVA',
+  MOVIDA_PLAN_B = 'MOVIDA_PLAN_B',
+  CANCELADA = 'CANCELADA'
+}
+
+export enum EstadoFinanciero {
+  AL_DIA = 'AL_DIA',
+  MOROSO = 'MOROSO',
+  MIGRADO = 'MIGRADO'
+}
+
+// Admin inscription response (matches InscripcionAdminResponse.java)
+export const InscripcionAdminSchema = object({
+  idInscripcion: number(),
+  usuarioUid: string(),
+  usuarioNombre: string(),
+  usuarioDni: optional(nullable(string())),
+  usuarioEmail: optional(nullable(string())),
+  usuarioTelefono: optional(nullable(string())),
+  planId: number(),
+  codigoPlan: string(),
+  nombrePlan: string(),
+  estadoInscripcion: enum_(EstadoInscripcion),
+  estadoFinanciero: enum_(EstadoFinanciero),
+  cuotasPagadas: number(),
+  totalCuotas: number(),
+  cuotasVencidas: number(),
+  montoPagado: union([
+    number(), 
+    pipe(MoneyJsonSchema, transform((input) => input.parsedValue))
+  ]),
+  montoTotal: union([
+    number(), 
+    pipe(MoneyJsonSchema, transform((input) => input.parsedValue))
+  ]),
+  montoRestante: union([
+    number(), 
+    pipe(MoneyJsonSchema, transform((input) => input.parsedValue))
+  ]),
+  proximoVencimiento: optional(nullable(string())),
+  fechaInscripcion: optional(nullable(string())),
+  fechaMigracion: optional(nullable(string()))
+});
+
+export type InscripcionAdmin = InferOutput<typeof InscripcionAdminSchema>;
+
+// Financial summary for dashboard (matches ResumenFinancieroResponse.java)
+export const ResumenFinancieroSchema = object({
+  recaudacionTotal: union([
+    number(), 
+    pipe(MoneyJsonSchema, transform((input) => input.parsedValue))
+  ]),
+  recaudacionPendiente: union([
+    number(), 
+    pipe(MoneyJsonSchema, transform((input) => input.parsedValue))
+  ]),
+  tasaMorosidad: number(),
+  inscripcionesActivas: number(),
+  totalInscripciones: number()
+});
+
+export type ResumenFinanciero = InferOutput<typeof ResumenFinancieroSchema>;
+
+// Manual payment request
+export const RegistroPagoManualRequestSchema = object({
+  idCuota: number(),
+  notas: string(),
+  metodo: string() // 'EFECTIVO', 'TRANSFERENCIA', etc.
+});
+
+export type RegistroPagoManualRequest = InferOutput<typeof RegistroPagoManualRequestSchema>;
+
+// Filter params for admin inscription queries
+export interface AdminInscripcionFilters {
+  plan?: string;
+  estadoInscripcion?: EstadoInscripcion;
+  estadoFinanciero?: EstadoFinanciero;
+  q?: string;
+}

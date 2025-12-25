@@ -1,7 +1,7 @@
 import { Link, useRouterState } from "@tanstack/react-router"
 import { useAuth } from "../hooks/useAuth"
 import UserAvatar from "./UserAvatar"
-import { Calendar, CreditCard, FlameKindling, type LucideProps } from "lucide-react"
+import { Calendar, CreditCard, FlameKindling, Wallet, type LucideProps } from "lucide-react"
 import type { ComponentType } from "react"
 
 
@@ -15,15 +15,20 @@ type NavItem = {
 }
 
 export default function MobileFooter({}: MobileFooterProps){
- const { user } = useAuth()
+ const { user, hasRole } = useAuth()
   const pathname = useRouterState({ select: (s) => s.location.pathname })
 
   if (!user) return null
+
+  // Check if user has admin/treasurer/reviewer roles
+  const canAccessTesoreria = hasRole('admin') || hasRole('tesorero') || hasRole('revisor')
 
   const navItems: NavItem[] = [
     { name: 'Calendario', to: '/calendario', icon: Calendar },
     { name: 'Inicio', to: '/dashboard', icon: FlameKindling, isCenter: true },
     { name: 'Pagos', to: '/pagos', icon: CreditCard },
+    // Add Tesorería for authorized users
+    ...(canAccessTesoreria ? [{ name: 'Tesorería', to: '/tesoreria', icon: Wallet }] : [])
   ]
 
   return (

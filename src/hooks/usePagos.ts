@@ -5,7 +5,13 @@
 import { useMutation, useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { pagosService } from '../api/services/pagos';
 import { pagosKeys } from '../api/query-keys/pagos.keys';
-import type { PlanPagoRequest, InscripcionRequest, IntencionPagoRequest } from '../api/schemas/pagos';
+import type { 
+  PlanPagoRequest, 
+  InscripcionRequest, 
+  IntencionPagoRequest,
+  AdminInscripcionFilters,
+  RegistroPagoManualRequest
+} from '../api/schemas/pagos';
 
 // ============================================
 // Hooks para Planes (Admin/Public)
@@ -174,5 +180,87 @@ export function useCrearIntencionPago() {
     crearIntencion: mutation.mutateAsync,
     cargando: mutation.isPending,
     error: mutation.error
+  };
+}
+
+// ============================================
+// Hooks para Tesorería (ADMIN)
+// ============================================
+
+export function useInscripcionesAdmin(filters?: AdminInscripcionFilters) {
+  const query = useQuery({
+    queryKey: ['admin', 'inscripciones', filters],
+    queryFn: () => pagosService.listarInscripcionesAdmin(filters),
+    placeholderData: keepPreviousData
+  });
+
+  return {
+    inscripciones: query.data || [],
+    cargando: query.isLoading,
+    error: query.error,
+    refetch: query.refetch
+  };
+}
+
+export function useResumenFinanciero() {
+  const query = useQuery({
+    queryKey: ['admin', 'inscripciones', 'resumen'],
+    queryFn: () => pagosService.obtenerResumenFinanciero()
+  });
+
+  return {
+    resumen: query.data,
+    cargando: query.isLoading,
+    error: query.error,
+    refetch: query.refetch
+  };
+}
+
+export function useMigraciones() {
+  const query = useQuery({
+    queryKey: ['admin', 'inscripciones', 'migraciones'],
+    queryFn: () => pagosService.listarMigraciones()
+  });
+
+  return {
+    migraciones: query.data || [],
+    cargando: query.isLoading,
+    error: query.error,
+    refetch: query.refetch
+  };
+}
+
+export function useInscripcionAdmin(id: number | null) {
+  const query = useQuery({
+    queryKey: ['admin', 'inscripciones', id],
+    queryFn: () => pagosService.obtenerInscripcionAdmin(id!),
+    enabled: !!id
+  });
+
+  return {
+    inscripcion: query.data,
+    cargando: query.isLoading,
+    error: query.error,
+    refetch: query.refetch
+  };
+}
+
+export function useRegistrarPagoManual() {
+  const queryClient = useQueryClient();
+  
+  const mutation = useMutation({
+    mutationFn: (request: RegistroPagoManualRequest) => 
+      pagosService.registrarPagoManual(request),
+    onSuccess: () => {
+      // Invalidar todas las queries admin para refrescar datos
+      queryClient.invalidateQueries({ queryKey: ['admin', 'inscripciones'] });
+    }
+  });
+
+  return {
+    registrar: mutation.mutateAsync,
+    cargando: mutation.isPending,
+    error: mutation.error,
+    reset: mutation.reset
   };
 }

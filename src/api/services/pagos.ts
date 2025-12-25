@@ -11,18 +11,25 @@ import {
   InscripcionSchema,
   CuotaSchema,
   IntencionPagoResponseSchema,
+  InscripcionAdminSchema,
+  ResumenFinancieroSchema,
   type PlanPago, 
   type PlanPagoRequest,
   type Inscripcion,
   type InscripcionRequest,
   type Cuota,
   type IntencionPagoResponse,
-  type IntencionPagoRequest
+  type IntencionPagoRequest,
+  type InscripcionAdmin,
+  type ResumenFinanciero,
+  type RegistroPagoManualRequest,
+  type AdminInscripcionFilters
 } from '../schemas/pagos';
 
 const PlanesSchema = array(PlanPagoSchema);
 const InscripcionesSchema = array(InscripcionSchema);
 const CuotasSchema = array(CuotaSchema);
+const InscripcionesAdminSchema = array(InscripcionAdminSchema);
 
 export const pagosService = {
   
@@ -163,5 +170,67 @@ export const pagosService = {
   crearIntencionPago: async (data: IntencionPagoRequest): Promise<IntencionPagoResponse> => {
     const response = await client.post('/pagos/intenciones', data);
     return parse(IntencionPagoResponseSchema, response.data);
+  },
+
+  // ============================================
+  // Administración de Inscripciones (TESORERO/ADMIN)
+  // ============================================
+
+  /**
+   * Lista inscripciones con filtros opcionales (Admin)
+   */
+  listarInscripcionesAdmin: async (filters?: AdminInscripcionFilters): Promise<InscripcionAdmin[]> => {
+    const response = await client.get('/admin/inscripciones', { params: filters });
+    
+    // HATEOAS handling
+    if (response.data?._embedded?.inscripciones) {
+      return parse(InscripcionesAdminSchema, response.data._embedded.inscripciones);
+    }
+    
+    if (Array.isArray(response.data)) {
+      return parse(InscripcionesAdminSchema, response.data);
+    }
+    
+    return [];
+  },
+
+  /**
+   * Obtiene resumen financiero para dashboard de tesorería
+   */
+  obtenerResumenFinanciero: async (): Promise<ResumenFinanciero> => {
+    const response = await client.get('/admin/inscripciones/resumen');
+    return parse(ResumenFinancieroSchema, response.data);
+  },
+
+  /**
+   * Lista inscripciones migradas a Plan B (para auditoría)
+   */
+  listarMigraciones: async (): Promise<InscripcionAdmin[]> => {
+    const response = await client.get('/admin/inscripciones/migraciones');
+    
+    if (response.data?._embedded?.inscripciones) {
+      return parse(InscripcionesAdminSchema, response.data._embedded.inscripciones);
+    }
+    
+    if (Array.isArray(response.data)) {
+      return parse(InscripcionesAdminSchema, response.data);
+    }
+    
+    return [];
+  },
+
+  /**
+   * Obtiene detalle de una inscripción (Admin)
+   */
+  obtenerInscripcionAdmin: async (id: number): Promise<InscripcionAdmin> => {
+    const response = await client.get(`/admin/inscripciones/${id}`);
+    return parse(InscripcionAdminSchema, response.data);
+  },
+
+  /**
+   * Registra un pago manual (efectivo/transferencia)
+   */
+  registrarPagoManual: async (request: RegistroPagoManualRequest): Promise<void> => {
+    await client.post('/admin/pagos/manual', request);
   }
 };
