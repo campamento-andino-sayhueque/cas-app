@@ -27,8 +27,22 @@ function aEventoCalendario(evento: Evento): EventoCalendarioFormateado {
   return {
     id: String(evento.id),
     title: evento.titulo,
-    start: new Date(evento.fechaInicio),
-    end: new Date(evento.fechaFin),
+    start: (() => {
+      const d = new Date(evento.fechaInicio);
+      // Si es exactamente medianoche UTC, es probable que sea un evento de día completo
+      // o un vencimiento. Lo forzamos a medianoche local para evitar el shift al día anterior.
+      if (evento.fechaInicio.endsWith('T00:00:00Z')) {
+        return new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+      }
+      return d;
+    })(),
+    end: (() => {
+      const d = new Date(evento.fechaFin);
+      if (evento.fechaFin.endsWith('T23:59:59Z')) {
+        return new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 23, 59, 59);
+      }
+      return d;
+    })(),
     descripcion: evento.descripcion || "",
     // Normalizar `tipo` que puede venir como string o como objeto { codigo, etiqueta, formato }
     tipo: ((): string => {
@@ -39,7 +53,7 @@ function aEventoCalendario(evento: Evento): EventoCalendarioFormateado {
       const obj = t as Record<string, string>;
       return obj.formato ?? obj.codigo ?? obj.etiqueta ?? String(t);
     })(),
-    ubicacion: evento.ubicacion,
+    ubicacion: evento.ubicacion ?? undefined,
     participantes: evento.participantes,
   };
 }

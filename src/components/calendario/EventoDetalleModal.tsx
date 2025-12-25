@@ -26,6 +26,7 @@ interface EventoDetalleModalProps {
   onEditar: () => void;
   onEliminar: () => void;
   eliminando: boolean;
+  puedeEditar?: boolean;
 }
 
 export function EventoDetalleModal({ 
@@ -34,7 +35,8 @@ export function EventoDetalleModal({
   onCerrar, 
   onEditar, 
   onEliminar, 
-  eliminando 
+  eliminando,
+  puedeEditar = false
 }: EventoDetalleModalProps) {
   
   return (
@@ -95,16 +97,20 @@ export function EventoDetalleModal({
           <Button variant="outline" onClick={onCerrar}>
             Cerrar
           </Button>
-          <Button variant="default" onClick={onEditar}>
-            ✏️ Editar
-          </Button>
-          <Button 
-            variant="destructive" 
-            onClick={onEliminar}
-            disabled={eliminando}
-          >
-            {eliminando ? "Eliminando..." : "🗑️ Eliminar"}
-          </Button>
+          {puedeEditar && (
+            <>
+              <Button variant="default" onClick={onEditar}>
+                ✏️ Editar
+              </Button>
+              <Button 
+                variant="destructive" 
+                onClick={onEliminar}
+                disabled={eliminando}
+              >
+                {eliminando ? "Eliminando..." : "🗑️ Eliminar"}
+              </Button>
+            </>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>

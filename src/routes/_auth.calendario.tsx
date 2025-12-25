@@ -24,6 +24,7 @@ import {
   useEliminarEvento, 
   useActualizarEvento 
 } from "../hooks/useCalendario";
+import { useAuth } from "../hooks/useAuth";
 import { calendarioStore, calendarioAcciones } from "../stores/calendario.store";
 import type { EventoRequest } from "../api/schemas/calendario";
 
@@ -40,6 +41,10 @@ export const Route = createFileRoute("/_auth/calendario")({
 });
 
 function CalendarioPage() {
+  // Permisos
+  const { hasRole } = useAuth();
+  const puedeEditar = hasRole("DIRIGENTE") || hasRole("ADMIN");
+
   // TanStack Store hooks
   const eventoSeleccionado = useStore(calendarioStore, (state) => state.eventoSeleccionado);
   const modalDetalleAbierto = useStore(calendarioStore, (state) => state.modalDetalleAbierto);
@@ -149,6 +154,7 @@ function CalendarioPage() {
           diasRestantes={diasRestantes} 
           onNuevoEvento={calendarioAcciones.abrirModalCrear} 
           error={error}
+          puedeEditar={puedeEditar}
         />
 
         <main className="max-w-7xl mx-auto">
@@ -173,6 +179,7 @@ function CalendarioPage() {
         onEditar={calendarioAcciones.abrirModalEditar}
         onEliminar={handleEliminarEvento}
         eliminando={eliminando}
+        puedeEditar={puedeEditar}
       />
 
       <EventoFormularioModal

@@ -46,6 +46,7 @@ import {
   DollarSign,
   GitBranch,
   FileCheck,
+  CalendarDays,
 } from "lucide-react";
 import React from 'react';
 import { Card, CardContent } from "../ui/card";
@@ -64,20 +65,23 @@ import {
 
 // --- Schemas por Paso ---
 
-const Step1Schema = object({
+// --- Schemas por Paso ---
+
+const DatosGeneralesSchema = object({
   nombreParaMostrar: pipe(string(), minLength(3, 'El nombre es obligatorio (min 3 caracteres)')),
   anio: pipe(number(), minValue(2020, 'Año inválido')),
   montoTotal: pipe(number(), minValue(1000, 'El monto debe ser al menos 1000')),
+  activo: boolean(),
+  moneda: string(),
+  estrategia: string(),
+});
+
+const VigenciaSchema = object({
   mesInicioHabilitado: number(),
   mesFinHabilitado: number(),
   diaVencimiento: number(),
-  activo: boolean(),
-  moneda: string(),
-  estrategia: string(), // Enum actually
 });
 
-// Nota: Validaremos PlanB dinámicamente porque depende del montoTotal del Plan A si queremos validación cruzada estricta,
-// pero por simplicidad en el schema estático validamos integridad básica.
 const Step2Schema = object({
   montoTotalPlanB: pipe(number(), minValue(0, 'El monto no puede ser negativo')),
   nombrePlanB: optional(string()),
@@ -92,7 +96,8 @@ const Step3Schema = object({
 
 // Flujo
 export const GlobalStepper = defineStepper(
-  { id: "general", title: "Plan A", schema: Step1Schema },
+  { id: "datos_generales", title: "Datos Grales.", schema: DatosGeneralesSchema },
+  { id: "vigencia", title: "Vigencia", schema: VigenciaSchema },
   { id: "planB", title: "Plan B", schema: Step2Schema },
   { id: "reglas", title: "Reglas", schema: Step3Schema },
   { id: "revision", title: "Revisión", schema: object({}) }
@@ -106,7 +111,8 @@ interface WizardPlanPagoProps {
 }
 
 const STEP_ICONS = {
-  general: LayoutList,
+  datos_generales: LayoutList,
+  vigencia: CalendarDays,
   planB: DollarSign,
   reglas: GitBranch,
   revision: FileCheck,
@@ -114,10 +120,17 @@ const STEP_ICONS = {
 
 const MESES = [
   { val: 1, label: 'Enero' },
-  // ... (rest is same, but I need to make sure I don't cut it off or I duplicate it)
-  // To avoid duplication/cut issues, I will assume MESES is defined below or I can redefine it safely if it was outside.
-  // Actually, MESES is defined in the file.
-  // I will just change the Component definition and defaultValues logic.
+  { val: 2, label: 'Febrero' },
+  { val: 3, label: 'Marzo' },
+  { val: 4, label: 'Abril' },
+  { val: 5, label: 'Mayo' },
+  { val: 6, label: 'Junio' },
+  { val: 7, label: 'Julio' },
+  { val: 8, label: 'Agosto' },
+  { val: 9, label: 'Septiembre' },
+  { val: 10, label: 'Octubre' },
+  { val: 11, label: 'Noviembre' },
+  { val: 12, label: 'Diciembre' },
 ];
 
 // Helper to map month name to number
@@ -187,7 +200,8 @@ function WizardPlanPagoContent({ abierto, onCerrar, onGuardar, cargando }: Wizar
     const currentStepId = stepper.current.id;
     let stepSchema: any;
 
-    if (currentStepId === 'general') stepSchema = Step1Schema;
+    if (currentStepId === 'datos_generales') stepSchema = DatosGeneralesSchema;
+    else if (currentStepId === 'vigencia') stepSchema = VigenciaSchema;
     else if (currentStepId === 'planB') stepSchema = Step2Schema;
     else if (currentStepId === 'reglas') stepSchema = Step3Schema;
     else {
@@ -196,22 +210,19 @@ function WizardPlanPagoContent({ abierto, onCerrar, onGuardar, cargando }: Wizar
     }
 
     const { values } = form.state;
-    // Debemos extraer solo los campos relevantes para validar, o validar todo el objeto y que valibot ignore los extra?
-    // valibot por defecto hace strip de keys no definidas si usamos strict(), pero object simple permite keys extra.
-    // Sin embargo, si tenemos campos obligatorios en otros pasos que estan vacios, stepSchema no deberia fallar 
-    // porque stepSchema solo define los del paso actual.
-    
+    // Valibot validation
     const result = safeParse(stepSchema, values);
 
     if (result.success) {
-      // Validación especial cruzada para Plan B
+      // Basic logic validation
       if (currentStepId === 'planB') {
         const montoA = values.montoTotal || 0;
         const montoB = values.montoTotalPlanB || 0;
         if (montoB <= montoA) {
           form.setFieldMeta('montoTotalPlanB', (prev) => ({
              ...prev, errorMap: { onChange: 'El monto del Plan B debe ser mayor al Plan A' },
-             errors: ['El monto del Plan B debe ser mayor al Plan A']
+             errors: ['El monto del Plan B debe ser mayor al Plan A'],
+             isTouched: true,
           }));
           return;
         }
@@ -219,18 +230,18 @@ function WizardPlanPagoContent({ abierto, onCerrar, onGuardar, cargando }: Wizar
 
       stepper.next();
     } else {
-      // Mapear errores de valibot a los campos del form
+      // Mapping errors
       result.issues.forEach((issue) => {
         const path = issue.path;
         if (path && path.length > 0) {
-            const firstItem = path[0] as any; // Cast to any to avoid TS error
+            const firstItem = path[0] as any;
             const fieldName = firstItem.key as string;
-            // @ts-ignore - Dynamic access
+            // @ts-ignore 
             form.setFieldMeta(fieldName, (prev) => ({
                ...prev,
-               errorMap: { onChange: issue.message },
-               errors: [issue.message], // Forzamos mostrar el error
-               isTouched: true, // Forzamos touched para que se vea
+               errorMap: { onChange: issue.message, onBlur: issue.message },
+               errors: [issue.message],
+               isTouched: true,
             }));
         }
       });
@@ -238,6 +249,31 @@ function WizardPlanPagoContent({ abierto, onCerrar, onGuardar, cargando }: Wizar
   };
 
   const handleBack = () => stepper.prev();
+
+  const handleConfirmar = () => {
+    const { values } = form.state;
+    const finalData = { ...values };
+    
+    // Auto-calcular min/max cuotas basado en vigencia
+    const start = finalData.mesInicioHabilitado;
+    const end = finalData.mesFinHabilitado;
+    const totalMonths = end >= start ? (end - start + 1) : (12 - start + 1) + end;
+    
+    // Plan A es estricto: la cantidad de cuotas es igual a la cantidad de meses
+    finalData.minCuotas = totalMonths;
+    finalData.maxCuotas = totalMonths;
+
+    if (!finalData.codigo) {
+      finalData.codigo = `PLAN-A-${finalData.anio}`;
+    }
+    if (!finalData.codigoPlanB) {
+      finalData.codigoPlanB = `PLAN-B-${finalData.anio}`;
+    }
+    if (!finalData.nombrePlanB) {
+      finalData.nombrePlanB = `${finalData.nombreParaMostrar} (Plan B)`;
+    }
+    onGuardar(finalData);
+  };
 
   return (
     <Dialog open={abierto} onOpenChange={(open) => !open && onCerrar()}>
@@ -294,7 +330,8 @@ function WizardPlanPagoContent({ abierto, onCerrar, onGuardar, cargando }: Wizar
           className="space-y-6 py-4 px-1"
         >
           {stepper.switch({
-            general: () => <StepPlanA form={form} />,
+            datos_generales: () => <StepDatosGenerales form={form} />,
+            vigencia: () => <StepVigencia form={form} />,
             planB: () => <StepPlanB form={form} />,
             reglas: () => <StepReglas form={form} />,
             revision: () => <StepRevision form={form} />,
@@ -306,7 +343,7 @@ function WizardPlanPagoContent({ abierto, onCerrar, onGuardar, cargando }: Wizar
             </Button>
             
             {stepper.isLast ? (
-              <Button type="submit" disabled={cargando}>
+              <Button type="button" onClick={handleConfirmar} disabled={cargando}>
                 {cargando ? "Guardando..." : "Confirmar y Crear"}
               </Button>
             ) : (
@@ -321,7 +358,7 @@ function WizardPlanPagoContent({ abierto, onCerrar, onGuardar, cargando }: Wizar
   );
 }
 
-function StepPlanA({ form }: { form: any }) {
+function StepDatosGenerales({ form }: { form: any }) {
   const formatCurrency = (val: number) => {
     if (!val && val !== 0) return "";
     return Number(val).toLocaleString("es-AR");
@@ -339,17 +376,14 @@ function StepPlanA({ form }: { form: any }) {
           <LayoutList className="w-5 h-5" />
         </div>
         <div>
-          <h3 className="text-lg font-medium">Plan A - Configuración Principal</h3>
-          <p className="text-xs text-muted-foreground">Define el plan estricto mensual. Los pagos deben hacerse mes a mes.</p>
+          <h3 className="text-lg font-medium">Datos Generales</h3>
+          <p className="text-xs text-muted-foreground">Información básica del plan de pago.</p>
         </div>
       </div>
 
       <div className="space-y-4">
         <form.Field 
           name="nombreParaMostrar" 
-          validators={{
-             onChange: Step1Schema.entries.nombreParaMostrar
-          }}
         >
           {(field: any) => (
             <div className="space-y-2">
@@ -362,29 +396,32 @@ function StepPlanA({ form }: { form: any }) {
                 onBlur={field.handleBlur}
                 className={field.state.meta.errors.length ? "border-red-500" : ""}
               />
-              {field.state.meta.errors ? (
-                 <p className="text-xs text-red-500">{field.state.meta.errors.join(", ")}</p>
-              ) : null}
+              {field.state.meta.errors.length > 0 && (
+                 <p className="text-xs text-red-500">
+                   {Array.from(new Set(field.state.meta.errors.map((err: any) => typeof err === 'object' ? err.message : String(err)))).join(", ")}
+                 </p>
+              )}
             </div>
           )}
         </form.Field>
 
         <div className="grid grid-cols-2 gap-4">
-          <form.Field name="anio" validators={{ onChange: Step1Schema.entries.anio }}>
+          <form.Field name="anio">
             {(field: any) => (
               <div className="space-y-2">
-                <Label htmlFor="anio">Año</Label>
+                <Label htmlFor="anio">Año del Evento</Label>
                 <Input type="number" id="anio" value={field.state.value} onChange={e => field.handleChange(Number(e.target.value))} />
-                {field.state.meta.errors ? (
-                   <p className="text-xs text-red-500">{field.state.meta.errors.join(", ")}</p>
-                ) : null}
+                {field.state.meta.errors.length > 0 && (
+                   <p className="text-xs text-red-500">
+                     {Array.from(new Set(field.state.meta.errors.map((err: any) => typeof err === 'object' ? err.message : String(err)))).join(", ")}
+                   </p>
+                )}
               </div>
             )}
           </form.Field>
           
           <form.Field 
             name="montoTotal"
-            validators={{ onChange: Step1Schema.entries.montoTotal }}
           >
             {(field: any) => (
               <div className="space-y-2">
@@ -398,66 +435,115 @@ function StepPlanA({ form }: { form: any }) {
                     className={`pl-7 ${field.state.meta.errors.length ? "border-red-500" : ""}`}
                   />
                 </div>
-                {field.state.meta.errors ? (
-                   <p className="text-xs text-red-500">{field.state.meta.errors.join(", ")}</p>
-                ) : null}
+                {field.state.meta.errors.length > 0 && (
+                   <p className="text-xs text-red-500">
+                     {Array.from(new Set(field.state.meta.errors.map((err: any) => typeof err === 'object' ? err.message : String(err)))).join(", ")}
+                   </p>
+                )}
               </div>
             )}
           </form.Field>
         </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <form.Field name="mesInicioHabilitado">
-            {(field: any) => (
-              <div className="space-y-2">
-                <Label>Mes Inicio Primera Cuota</Label>
-                <Select value={String(field.state.value)} onValueChange={(v) => field.handleChange(Number(v))}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {MESES.map(m => <SelectItem key={m.val} value={String(m.val)}>{m.label}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-          </form.Field>
-          <form.Field name="mesFinHabilitado">
-            {(field: any) => (
-              <div className="space-y-2">
-                <Label>Mes Fin Última Cuota</Label>
-                <Select value={String(field.state.value)} onValueChange={(v) => field.handleChange(Number(v))}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {MESES.map(m => <SelectItem key={m.val} value={String(m.val)}>{m.label}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-          </form.Field>
-        </div>
-
-        <form.Field name="diaVencimiento">
-          {(field: any) => (
-            <div className="space-y-2">
-              <Label>Día de Vencimiento Mensual</Label>
-              <Select value={String(field.state.value)} onValueChange={(v) => field.handleChange(Number(v))}>
-                <SelectTrigger><SelectValue placeholder="Seleccionar día" /></SelectTrigger>
-                <SelectContent>
-                  {[5, 10, 15, 20, 25].map(d => <SelectItem key={d} value={String(d)}>Día {d}</SelectItem>)}
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground">Fecha límite de pago para cada mes.</p>
-            </div>
-          )}
-        </form.Field>
 
         <form.Field name="activo">
           {(field: any) => (
             <div className="flex items-center space-x-2 pt-2">
               <Switch id="activo" checked={field.state.value} onCheckedChange={field.handleChange} />
-              <Label htmlFor="activo">Habilitar plan inmediatamente</Label>
+              <Label htmlFor="activo">Habilitar plan inmediatamente para inscripciones</Label>
             </div>
           )}
         </form.Field>
+      </div>
+    </div>
+  );
+}
+
+function StepVigencia({ form }: { form: any }) {
+  const anioPlan = form.getFieldValue('anio') || new Date().getFullYear();
+
+  return (
+    <div className="grid gap-6 animate-in fade-in slide-in-from-right-4 duration-300">
+      <div className="flex items-center gap-2 pb-2 border-b">
+         <div className="p-2 rounded-full bg-blue-100 text-blue-600">
+            <CalendarDays className="w-5 h-5" />
+         </div>
+         <div>
+            <h3 className="text-lg font-medium">Vigencia y Vencimientos</h3>
+            <p className="text-xs text-muted-foreground">Define cuándo empieza y termina el plan de pagos.</p>
+         </div>
+      </div>
+
+      <div className="space-y-6">
+         <form.Subscribe selector={(state: any) => [state.values.mesInicioHabilitado, state.values.mesFinHabilitado]}>
+            {([inicio, fin]: any[]) => (
+               <TimelinePreview 
+                  start={inicio} 
+                  end={fin} 
+               />
+            )}
+         </form.Subscribe>
+
+         <div className="grid grid-cols-2 gap-4">
+            <form.Field name="mesInicioHabilitado">
+               {(field: any) => (
+                 <div className="space-y-2">
+                   <Label>Mes Inicio (Primera Cuota)</Label>
+                   <Select value={String(field.state.value)} onValueChange={(v) => field.handleChange(Number(v))}>
+                     <SelectTrigger className="bg-muted/20"><SelectValue /></SelectTrigger>
+                     <SelectContent>
+                       {MESES.map(m => (
+                          <SelectItem key={m.val} value={String(m.val)}>
+                             {m.label} <span className="text-muted-foreground text-xs ml-1">({anioPlan})</span>
+                          </SelectItem>
+                       ))}
+                     </SelectContent>
+                   </Select>
+                 </div>
+               )}
+            </form.Field>
+
+            <form.Field name="mesFinHabilitado">
+              {(field: any) => {
+                 const inicio = form.getFieldValue('mesInicioHabilitado');
+                 return (
+                    <div className="space-y-2">
+                      <Label>Mes Fin (Última Cuota)</Label>
+                      <Select value={String(field.state.value)} onValueChange={(v) => field.handleChange(Number(v))}>
+                        <SelectTrigger className="bg-muted/20"><SelectValue /></SelectTrigger>
+                        <SelectContent className="max-h-[200px]">
+                          {MESES.map(m => {
+                             const isNextYear = inicio && m.val < inicio;
+                             const yearDisplay = isNextYear ? anioPlan + 1 : anioPlan;
+                             const highlight = isNextYear ? "text-orange-600 font-medium" : "text-muted-foreground";
+                             
+                             return (
+                               <SelectItem key={m.val} value={String(m.val)}>
+                                  {m.label} <span className={`${highlight} text-xs ml-1`}>({yearDisplay})</span>
+                               </SelectItem>
+                             );
+                          })}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                 );
+              }}
+            </form.Field>
+         </div>
+
+         <form.Field name="diaVencimiento">
+            {(field: any) => (
+              <div className="space-y-2">
+                <Label>Día de Vencimiento Mensual</Label>
+                <Select value={String(field.state.value)} onValueChange={(v) => field.handleChange(Number(v))}>
+                  <SelectTrigger><SelectValue placeholder="Seleccionar día" /></SelectTrigger>
+                  <SelectContent>
+                    {[5, 10, 15, 20, 25].map(d => <SelectItem key={d} value={String(d)}>Día {d} de cada mes</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">Fecha límite de pago para cada cuota.</p>
+              </div>
+            )}
+         </form.Field>
       </div>
     </div>
   );
@@ -491,9 +577,6 @@ function StepPlanB({ form }: { form: any }) {
       <div className="space-y-4">
         <form.Field 
           name="montoTotalPlanB"
-          validators={{
-            onChange: Step2Schema.entries.montoTotalPlanB
-          }}
         >
           {(field: any) => (
             <div className="space-y-2">
@@ -511,7 +594,9 @@ function StepPlanB({ form }: { form: any }) {
                 />
               </div>
               {field.state.meta.errors ? (
-                   <p className="text-xs text-red-500">{field.state.meta.errors.join(", ")}</p>
+                   <p className="text-xs text-red-500">
+                     {Array.from(new Set(field.state.meta.errors.map((err: any) => typeof err === 'object' ? err.message : String(err)))).join(", ")}
+                   </p>
               ) : null}
               {field.state.value > 0 && montoTotalA > 0 && field.state.value > montoTotalA && (
                 <p className="text-xs text-orange-600 font-medium mt-1">
@@ -595,7 +680,7 @@ function StepReglas({ form }: { form: any }) {
                 </form.Field>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <form.Field name="cuotasMinimasAntesControl" validators={{ onChange: Step3Schema.entries.cuotasMinimasAntesControl }}>
+                  <form.Field name="cuotasMinimasAntesControl">
                     {(field: any) => (
                       <div className="space-y-2">
                         <Label>Cuotas Mínimas Pagas</Label>
@@ -608,13 +693,15 @@ function StepReglas({ form }: { form: any }) {
                         </div>
                         <p className="text-xs text-muted-foreground">Al llegar al mes de control.</p>
                         {field.state.meta.errors ? (
-                            <p className="text-xs text-red-500">{field.state.meta.errors.join(", ")}</p>
+                            <p className="text-xs text-red-500">
+                              {Array.from(new Set(field.state.meta.errors.map((err: any) => typeof err === 'object' ? err.message : String(err)))).join(", ")}
+                            </p>
                         ) : null}
                       </div>
                     )}
                   </form.Field>
 
-                  <form.Field name="mesesAtrasoParaTransicion" validators={{ onChange: Step3Schema.entries.mesesAtrasoParaTransicion }}>
+                  <form.Field name="mesesAtrasoParaTransicion">
                     {(field: any) => (
                       <div className="space-y-2">
                         <Label>Meses Atraso Tolerados</Label>
@@ -627,7 +714,9 @@ function StepReglas({ form }: { form: any }) {
                         </div>
                         <p className="text-xs text-muted-foreground text-orange-600 font-medium">Zona de Tolerancia (Naranja)</p>
                         {field.state.meta.errors ? (
-                            <p className="text-xs text-red-500">{field.state.meta.errors.join(", ")}</p>
+                            <p className="text-xs text-red-500">
+                              {Array.from(new Set(field.state.meta.errors.map((err: any) => typeof err === 'object' ? err.message : String(err)))).join(", ")}
+                            </p>
                         ) : null}
                       </div>
                     )}

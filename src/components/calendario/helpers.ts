@@ -19,6 +19,9 @@ export const obtenerColorEvento = (tipo: string) => {
       return casColors.nature.green[500];
     case "excursion":
       return casColors.nature.mountain;
+    case "vencimiento-cuota":
+    case "vencimiento_cuota":
+      return "#f59e0b"; // amber warning
     default:
       return casColors.ui.text.secondary;
   }
@@ -39,6 +42,9 @@ export const obtenerIconoEvento = (tipo: string) => {
       return "📚";
     case "excursion":
       return "🥾";
+    case "vencimiento-cuota":
+    case "vencimiento_cuota":
+      return "💸";
     default:
       return "📅";
   }

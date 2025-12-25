@@ -11,12 +11,14 @@ interface CalendarioHeaderProps {
   diasRestantes?: number;
   onNuevoEvento: () => void;
   error?: Error | null;
+  puedeEditar?: boolean;
 }
 
 export function CalendarioHeader({ 
   diasRestantes, 
   onNuevoEvento, 
-  error 
+  error,
+  puedeEditar = false
 }: CalendarioHeaderProps) {
   return (
     <header className="mb-8">
@@ -32,13 +34,15 @@ export function CalendarioHeader({
           )}
         </div>
         
-        <Button 
-          onClick={onNuevoEvento}
-          className="bg-orange-500 hover:bg-orange-600 text-white"
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          Nuevo Evento
-        </Button>
+        {puedeEditar && (
+          <Button 
+            onClick={onNuevoEvento}
+            className="bg-orange-500 hover:bg-orange-600 text-white"
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Nuevo Evento
+          </Button>
+        )}
       </div>
       
       {error && (

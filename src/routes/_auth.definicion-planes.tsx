@@ -90,9 +90,21 @@ function RouteComponent() {
 
       {error ? (
         <div className="text-red-500">Error al cargar planes</div>
+      ) : cargandoPlanes && (!planes || planes.length === 0) ? (
+        <div className="flex flex-col items-center justify-center py-12 text-muted-foreground animate-pulse">
+          <div className="h-8 w-8 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4" />
+          <p>Cargando planes...</p>
+        </div>
       ) : (
         <div className="relative">
-          {cargandoPlanes && <div className="absolute inset-0 bg-white/50 z-10 flex items-center justify-center">Cargando...</div>}
+          {cargandoPlanes && (
+            <div className="absolute inset-0 bg-white/60 dark:bg-slate-950/60 z-10 flex items-center justify-center backdrop-blur-[1px]">
+               <div className="bg-white dark:bg-slate-900 px-4 py-2 rounded-full shadow-lg border flex items-center gap-2">
+                 <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                 <span className="text-sm font-medium">Actualizando...</span>
+               </div>
+            </div>
+          )}
           <TablaPlanes 
               planes={planes} 
               onEditar={handleEditarPlan} 
