@@ -21,6 +21,15 @@ export function DashboardKPIs() {
   }
 
   const formatCurrency = (amount: number) => {
+    // Use compact notation for large numbers on mobile
+    if (amount >= 1000000) {
+      return new Intl.NumberFormat('es-AR', {
+        style: 'currency',
+        currency: 'ARS',
+        notation: 'compact',
+        maximumFractionDigits: 1
+      }).format(amount);
+    }
     return new Intl.NumberFormat('es-AR', {
       style: 'currency',
       currency: 'ARS',
@@ -35,6 +44,7 @@ export function DashboardKPIs() {
   const kpis = [
     {
       title: 'Recaudación Total',
+      shortTitle: 'Rec. Total',
       value: resumen ? formatCurrency(resumen.recaudacionTotal) : null,
       icon: DollarSign,
       color: 'text-green-600',
@@ -43,6 +53,7 @@ export function DashboardKPIs() {
     },
     {
       title: 'Recaudación Pendiente',
+      shortTitle: 'Rec. Pendiente',
       value: resumen ? formatCurrency(resumen.recaudacionPendiente) : null,
       icon: TrendingDown,
       color: 'text-amber-600',
@@ -51,6 +62,7 @@ export function DashboardKPIs() {
     },
     {
       title: 'Tasa de Morosidad',
+      shortTitle: 'Morosidad',
       value: resumen ? formatPercent(resumen.tasaMorosidad) : null,
       icon: AlertCircle,
       color: resumen && resumen.tasaMorosidad > 10 ? 'text-red-600' : 'text-emerald-600',
@@ -63,7 +75,8 @@ export function DashboardKPIs() {
     },
     {
       title: 'Inscripciones Activas',
-      value: resumen ? `${resumen.inscripcionesActivas} / ${resumen.totalInscripciones}` : null,
+      shortTitle: 'Inscripciones',
+      value: resumen ? `${resumen.inscripcionesActivas}/${resumen.totalInscripciones}` : null,
       icon: Users,
       color: 'text-blue-600',
       bgColor: 'bg-blue-50 dark:bg-blue-950/30',
@@ -72,27 +85,28 @@ export function DashboardKPIs() {
   ];
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
       {kpis.map((kpi) => (
         <Card 
           key={kpi.title}
           className={cn(
-            "border",
+            "border overflow-hidden",
             kpi.bgColor,
             kpi.borderColor
           )}
         >
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <kpi.icon className={cn("w-4 h-4", kpi.color)} />
-              {kpi.title}
+          <CardHeader className="pb-1 sm:pb-2 px-3 sm:px-6 pt-3 sm:pt-6">
+            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground flex items-center gap-1.5 sm:gap-2">
+              <kpi.icon className={cn("w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0", kpi.color)} />
+              <span className="sm:hidden">{kpi.shortTitle}</span>
+              <span className="hidden sm:inline">{kpi.title}</span>
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
             {cargando ? (
-              <Skeleton className="h-8 w-24" />
+              <Skeleton className="h-7 sm:h-8 w-20 sm:w-24" />
             ) : (
-              <p className={cn("text-2xl font-bold", kpi.color)}>
+              <p className={cn("text-lg sm:text-2xl font-bold truncate", kpi.color)}>
                 {kpi.value}
               </p>
             )}

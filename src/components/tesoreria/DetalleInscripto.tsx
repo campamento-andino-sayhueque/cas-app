@@ -61,18 +61,20 @@ export function DetalleInscripto({ inscripcion, open, onClose }: DetalleInscript
   return (
     <>
       <Sheet open={open} onOpenChange={(open) => !open && handleClose()}>
-        <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
-          <SheetHeader className="text-left">
-            <SheetTitle className="flex items-center gap-2">
-              <User className="w-5 h-5" />
-              {inscripcion.usuarioNombre}
-            </SheetTitle>
-            <SheetDescription>
-              Inscripción #{inscripcion.idInscripcion} - {inscripcion.nombrePlan}
-            </SheetDescription>
-          </SheetHeader>
+        <SheetContent className="w-full sm:max-w-lg overflow-y-auto p-0">
+          <div className="p-6 pb-4">
+            <SheetHeader className="text-left">
+              <SheetTitle className="flex items-center gap-2">
+                <User className="w-5 h-5" />
+                {inscripcion.usuarioNombre}
+              </SheetTitle>
+              <SheetDescription>
+                Inscripción #{inscripcion.idInscripcion} - {inscripcion.nombrePlan}
+              </SheetDescription>
+            </SheetHeader>
+          </div>
 
-          <div className="mt-6 space-y-6">
+          <div className="px-6 pb-8 space-y-6">
             {/* User contact info */}
             <section>
               <h3 className="text-sm font-semibold text-muted-foreground mb-3">

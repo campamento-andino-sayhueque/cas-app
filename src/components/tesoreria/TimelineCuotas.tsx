@@ -34,13 +34,13 @@ export function TimelineCuotas({ cuotas, onPagarManual }: TimelineCuotasProps) {
   const getStatusIcon = (estado: string) => {
     switch (estado) {
       case 'PAGADA':
-        return <CheckCircle2 className="w-5 h-5 text-green-600" />;
+        return <CheckCircle2 className="w-6 h-6 text-green-600" />;
       case 'VENCIDA':
-        return <AlertCircle className="w-5 h-5 text-red-600" />;
+        return <AlertCircle className="w-6 h-6 text-red-600" />;
       case 'PLANIFICADA':
       case 'PENDIENTE':
       default:
-        return <Clock className="w-5 h-5 text-gray-400" />;
+        return <Clock className="w-6 h-6 text-gray-400" />;
     }
   };
 
@@ -67,70 +67,51 @@ export function TimelineCuotas({ cuotas, onPagarManual }: TimelineCuotasProps) {
     );
   }
 
+  // Icon size is 24px (w-6), we center the line on it
+  const iconCenterOffset = 12; // half of 24px
+
   return (
-    <div className="relative">
-      {/* Vertical line */}
-      <div className="absolute left-[22px] top-2 bottom-2 w-0.5 bg-gray-200" />
+    <div className="relative pl-8">
+      {/* Vertical line - aligned with icon center */}
+      <div 
+        className="absolute top-3 bottom-3 w-0.5 bg-gray-200" 
+        style={{ left: `${iconCenterOffset - 1}px` }}
+      />
 
       <div className="space-y-4">
         {cuotas.map((cuota, index) => (
           <div 
             key={cuota.id || index}
             className={cn(
-              "relative flex gap-4 pl-12",
-              cuota.estado === 'PAGADA' && "opacity-75"
+              "relative",
+              cuota.estado === 'PAGADA' && "opacity-80"
             )}
           >
-            {/* Status icon */}
-            <div className="absolute left-0 bg-white p-1 rounded-full">
+            {/* Status icon - centered on the line */}
+            <div 
+              className="absolute bg-white rounded-full flex items-center justify-center"
+              style={{ 
+                left: `-${iconCenterOffset + 12}px`, // Move left so icon center is at 12px (line position)
+                top: '12px' // Vertically center with first line of content
+              }}
+            >
               {getStatusIcon(cuota.estado)}
             </div>
 
             {/* Content card */}
             <div className={cn(
-              "flex-1 border rounded-lg p-4",
+              "border rounded-lg p-4",
               cuota.estado === 'VENCIDA' && "border-red-200 bg-red-50/50",
               cuota.estado === 'PAGADA' && "border-green-200 bg-green-50/50"
             )}>
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="font-semibold">Cuota #{cuota.secuencia}</span>
-                    {getStatusBadge(cuota.estado)}
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    <div>
-                      <span className="text-muted-foreground">Vencimiento:</span>
-                      <span className="ml-2 font-medium">{formatDate(cuota.fechaVencimiento)}</span>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">Monto:</span>
-                      <span className="ml-2 font-medium">{formatCurrency(cuota.monto)}</span>
-                    </div>
-                    
-                    {cuota.estado === 'PAGADA' && (
-                      <>
-                        <div>
-                          <span className="text-muted-foreground">Fecha pago:</span>
-                          <span className="ml-2">{formatDate(cuota.fechaPago)}</span>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">Método:</span>
-                          <span className="ml-2">{cuota.metodoPago || '—'}</span>
-                        </div>
-                      </>
-                    )}
-                  </div>
-
-                  {cuota.notasAdministrativas && (
-                    <div className="mt-2 text-sm text-muted-foreground italic">
-                      "{cuota.notasAdministrativas}"
-                    </div>
-                  )}
+              {/* Header: Cuota number + badge + action */}
+              <div className="flex items-center justify-between gap-2 mb-3">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-semibold">Cuota #{cuota.secuencia}</span>
+                  {getStatusBadge(cuota.estado)}
                 </div>
-
-                {/* Action button for unpaid installments */}
+                
+                {/* Action button for unpaid - inline on mobile */}
                 {(cuota.estado === 'PLANIFICADA' || cuota.estado === 'VENCIDA' || cuota.estado === 'PENDIENTE') && (
                   <Button
                     variant="outline"
@@ -138,11 +119,42 @@ export function TimelineCuotas({ cuotas, onPagarManual }: TimelineCuotasProps) {
                     onClick={() => onPagarManual(cuota)}
                     className="shrink-0"
                   >
-                    <Banknote className="w-4 h-4 mr-1" />
-                    Pagar
+                    <Banknote className="w-4 h-4 sm:mr-1" />
+                    <span className="hidden sm:inline">Pagar</span>
                   </Button>
                 )}
               </div>
+
+              {/* Details grid - responsive */}
+              <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                <div>
+                  <span className="text-muted-foreground block text-xs">Vencimiento</span>
+                  <span className="font-medium">{formatDate(cuota.fechaVencimiento)}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground block text-xs">Monto</span>
+                  <span className="font-medium">{formatCurrency(cuota.monto)}</span>
+                </div>
+                
+                {cuota.estado === 'PAGADA' && (
+                  <>
+                    <div>
+                      <span className="text-muted-foreground block text-xs">Fecha pago</span>
+                      <span>{formatDate(cuota.fechaPago)}</span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground block text-xs">Método</span>
+                      <span>{cuota.metodoPago || '—'}</span>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {cuota.notasAdministrativas && (
+                <div className="mt-3 pt-3 border-t text-sm text-muted-foreground italic">
+                  "{cuota.notasAdministrativas}"
+                </div>
+              )}
             </div>
           </div>
         ))}

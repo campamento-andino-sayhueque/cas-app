@@ -1,4 +1,4 @@
-import { Eye } from 'lucide-react';
+import { Eye, ChevronRight } from 'lucide-react';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import {
@@ -25,7 +25,7 @@ interface TablaInscripcionesAdminProps {
 
 /**
  * Main data grid for admin inscriptions.
- * Displays user info, plan, payment progress, and financial status.
+ * Mobile-first: shows cards on mobile, table on desktop.
  */
 export function TablaInscripcionesAdmin({ 
   inscripciones, 
@@ -70,9 +70,9 @@ export function TablaInscripcionesAdmin({
 
   if (cargando) {
     return (
-      <div className="space-y-2">
+      <div className="space-y-3">
         {[...Array(5)].map((_, i) => (
-          <Skeleton key={i} className="h-14 w-full" />
+          <Skeleton key={i} className="h-24 md:h-14 w-full rounded-lg" />
         ))}
       </div>
     );
@@ -87,75 +87,140 @@ export function TablaInscripcionesAdmin({
   }
 
   return (
-    <div className="rounded-lg border overflow-hidden">
-      <Table>
-        <TableHeader>
-          <TableRow className="bg-muted/50">
-            <TableHead>Usuario</TableHead>
-            <TableHead>Plan</TableHead>
-            <TableHead className="text-center">Progreso</TableHead>
-            <TableHead>Estado</TableHead>
-            <TableHead>Financiero</TableHead>
-            <TableHead>Próx. Vencimiento</TableHead>
-            <TableHead className="text-right">Acciones</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {inscripciones.map((inscripcion) => (
-            <TableRow 
-              key={inscripcion.idInscripcion}
-              className={cn(
-                inscripcion.estadoFinanciero === EstadoFinanciero.MOROSO && "bg-red-50/50",
-                inscripcion.estadoFinanciero === EstadoFinanciero.MIGRADO && "bg-orange-50/50"
-              )}
-            >
-              <TableCell>
-                <div>
-                  <p className="font-medium">{inscripcion.usuarioNombre}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {inscripcion.usuarioDni || inscripcion.usuarioEmail || '—'}
-                  </p>
+    <>
+      {/* Mobile: Cards layout */}
+      <div className="md:hidden space-y-3">
+        {inscripciones.map((inscripcion) => (
+          <div
+            key={inscripcion.idInscripcion}
+            onClick={() => onVerDetalle(inscripcion)}
+            className={cn(
+              "border rounded-lg p-4 cursor-pointer active:bg-muted/50 transition-colors",
+              inscripcion.estadoFinanciero === EstadoFinanciero.MOROSO && "border-red-200 bg-red-50/50",
+              inscripcion.estadoFinanciero === EstadoFinanciero.MIGRADO && "border-orange-200 bg-orange-50/50"
+            )}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex-1 min-w-0">
+                {/* User name and badges */}
+                <div className="flex items-center gap-2 flex-wrap mb-1">
+                  <span className="font-semibold truncate">{inscripcion.usuarioNombre}</span>
+                  {getEstadoFinancieroBadge(inscripcion.estadoFinanciero)}
                 </div>
-              </TableCell>
-              <TableCell>
-                <span className="font-mono text-sm">{inscripcion.codigoPlan}</span>
-              </TableCell>
-              <TableCell className="text-center">
-                <span className={cn(
-                  "font-medium",
-                  inscripcion.cuotasPagadas === inscripcion.totalCuotas && "text-green-600"
-                )}>
-                  {inscripcion.cuotasPagadas}/{inscripcion.totalCuotas}
-                </span>
-                {inscripcion.cuotasVencidas > 0 && (
-                  <span className="text-red-600 ml-1 text-sm">
-                    ({inscripcion.cuotasVencidas} vencidas)
-                  </span>
+                
+                {/* Secondary info */}
+                <p className="text-sm text-muted-foreground truncate mb-2">
+                  {inscripcion.usuarioDni || inscripcion.usuarioEmail || '—'}
+                </p>
+
+                {/* Stats row */}
+                <div className="flex items-center gap-4 text-sm">
+                  <div className="flex items-center gap-1">
+                    <span className="text-muted-foreground">Plan:</span>
+                    <span className="font-mono">{inscripcion.codigoPlan}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span className="text-muted-foreground">Cuotas:</span>
+                    <span className={cn(
+                      "font-medium",
+                      inscripcion.cuotasPagadas === inscripcion.totalCuotas && "text-green-600"
+                    )}>
+                      {inscripcion.cuotasPagadas}/{inscripcion.totalCuotas}
+                    </span>
+                    {inscripcion.cuotasVencidas > 0 && (
+                      <span className="text-red-600 text-xs">
+                        ({inscripcion.cuotasVencidas} venc.)
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Next due date */}
+                {inscripcion.proximoVencimiento && (
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Próx. venc: {formatDate(inscripcion.proximoVencimiento)}
+                  </p>
                 )}
-              </TableCell>
-              <TableCell>
-                {getEstadoInscripcionBadge(inscripcion.estadoInscripcion)}
-              </TableCell>
-              <TableCell>
-                {getEstadoFinancieroBadge(inscripcion.estadoFinanciero)}
-              </TableCell>
-              <TableCell>
-                {formatDate(inscripcion.proximoVencimiento)}
-              </TableCell>
-              <TableCell className="text-right">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onVerDetalle(inscripcion)}
-                >
-                  <Eye className="w-4 h-4 mr-1" />
-                  Ver
-                </Button>
-              </TableCell>
+              </div>
+
+              {/* Chevron */}
+              <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0 mt-1" />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop: Table layout */}
+      <div className="hidden md:block rounded-lg border overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-muted/50">
+              <TableHead>Usuario</TableHead>
+              <TableHead>Plan</TableHead>
+              <TableHead className="text-center">Progreso</TableHead>
+              <TableHead>Estado</TableHead>
+              <TableHead>Financiero</TableHead>
+              <TableHead>Próx. Vencimiento</TableHead>
+              <TableHead className="text-right">Acciones</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+          </TableHeader>
+          <TableBody>
+            {inscripciones.map((inscripcion) => (
+              <TableRow 
+                key={inscripcion.idInscripcion}
+                className={cn(
+                  inscripcion.estadoFinanciero === EstadoFinanciero.MOROSO && "bg-red-50/50",
+                  inscripcion.estadoFinanciero === EstadoFinanciero.MIGRADO && "bg-orange-50/50"
+                )}
+              >
+                <TableCell>
+                  <div>
+                    <p className="font-medium">{inscripcion.usuarioNombre}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {inscripcion.usuarioDni || inscripcion.usuarioEmail || '—'}
+                    </p>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <span className="font-mono text-sm">{inscripcion.codigoPlan}</span>
+                </TableCell>
+                <TableCell className="text-center">
+                  <span className={cn(
+                    "font-medium",
+                    inscripcion.cuotasPagadas === inscripcion.totalCuotas && "text-green-600"
+                  )}>
+                    {inscripcion.cuotasPagadas}/{inscripcion.totalCuotas}
+                  </span>
+                  {inscripcion.cuotasVencidas > 0 && (
+                    <span className="text-red-600 ml-1 text-sm">
+                      ({inscripcion.cuotasVencidas} vencidas)
+                    </span>
+                  )}
+                </TableCell>
+                <TableCell>
+                  {getEstadoInscripcionBadge(inscripcion.estadoInscripcion)}
+                </TableCell>
+                <TableCell>
+                  {getEstadoFinancieroBadge(inscripcion.estadoFinanciero)}
+                </TableCell>
+                <TableCell>
+                  {formatDate(inscripcion.proximoVencimiento)}
+                </TableCell>
+                <TableCell className="text-right">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onVerDetalle(inscripcion)}
+                  >
+                    <Eye className="w-4 h-4 mr-1" />
+                    Ver
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    </>
   );
 }
