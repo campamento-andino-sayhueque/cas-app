@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as PagoResultadoRouteImport } from './routes/pago-resultado'
 import { Route as CallbackRouteImport } from './routes/callback'
 import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as IndexRouteImport } from './routes/index'
@@ -22,6 +23,11 @@ import { Route as AuthCarpasRouteImport } from './routes/_auth.carpas'
 import { Route as AuthCalendarioRouteImport } from './routes/_auth.calendario'
 import { Route as AuthAcampantesRouteImport } from './routes/_auth.acampantes'
 
+const PagoResultadoRoute = PagoResultadoRouteImport.update({
+  id: '/pago-resultado',
+  path: '/pago-resultado',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CallbackRoute = CallbackRouteImport.update({
   id: '/callback',
   path: '/callback',
@@ -85,6 +91,7 @@ const AuthAcampantesRoute = AuthAcampantesRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/callback': typeof CallbackRoute
+  '/pago-resultado': typeof PagoResultadoRoute
   '/acampantes': typeof AuthAcampantesRoute
   '/calendario': typeof AuthCalendarioRoute
   '/carpas': typeof AuthCarpasRoute
@@ -98,6 +105,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/callback': typeof CallbackRoute
+  '/pago-resultado': typeof PagoResultadoRoute
   '/acampantes': typeof AuthAcampantesRoute
   '/calendario': typeof AuthCalendarioRoute
   '/carpas': typeof AuthCarpasRoute
@@ -113,6 +121,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_auth': typeof AuthRouteWithChildren
   '/callback': typeof CallbackRoute
+  '/pago-resultado': typeof PagoResultadoRoute
   '/_auth/acampantes': typeof AuthAcampantesRoute
   '/_auth/calendario': typeof AuthCalendarioRoute
   '/_auth/carpas': typeof AuthCarpasRoute
@@ -128,6 +137,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/callback'
+    | '/pago-resultado'
     | '/acampantes'
     | '/calendario'
     | '/carpas'
@@ -141,6 +151,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/callback'
+    | '/pago-resultado'
     | '/acampantes'
     | '/calendario'
     | '/carpas'
@@ -155,6 +166,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_auth'
     | '/callback'
+    | '/pago-resultado'
     | '/_auth/acampantes'
     | '/_auth/calendario'
     | '/_auth/carpas'
@@ -170,10 +182,18 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRouteWithChildren
   CallbackRoute: typeof CallbackRoute
+  PagoResultadoRoute: typeof PagoResultadoRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/pago-resultado': {
+      id: '/pago-resultado'
+      path: '/pago-resultado'
+      fullPath: '/pago-resultado'
+      preLoaderRoute: typeof PagoResultadoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/callback': {
       id: '/callback'
       path: '/callback'
@@ -291,6 +311,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRouteWithChildren,
   CallbackRoute: CallbackRoute,
+  PagoResultadoRoute: PagoResultadoRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
