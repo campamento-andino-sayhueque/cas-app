@@ -172,6 +172,10 @@ function WizardPlanPagoContent({ abierto, onCerrar, onGuardar, cargando }: Wizar
       mesInicioControlAtraso: 7, // Julio
       cuotasMinimasAntesControl: 4,
       mesesAtrasoParaTransicion: 2,
+
+      // Política de devolución por baja
+      mesLimiteDevolucion100: 9, // Septiembre - 100% devolución
+      mesLimiteDevolucion50: 10, // Octubre - 50% devolución
     } as PlanPagoRequest,
     onSubmit: async ({ value }) => {
       const finalData = { ...value };
@@ -424,8 +428,8 @@ function StepDatosGenerales({ form }: { form: any }) {
                       type="button"
                       onClick={() => field.handleChange(opt.value)}
                       className={`flex items-center gap-2 px-4 py-2 rounded-lg border-2 transition-all duration-200 ${isSelected
-                          ? 'bg-primary text-primary-foreground border-primary shadow-md scale-105'
-                          : 'bg-muted/30 border-border hover:border-primary/50 hover:bg-muted/50'
+                        ? 'bg-primary text-primary-foreground border-primary shadow-md scale-105'
+                        : 'bg-muted/30 border-border hover:border-primary/50 hover:bg-muted/50'
                         }`}
                     >
                       <span className="text-lg">{opt.icon}</span>
@@ -757,6 +761,61 @@ function StepReglas({ form }: { form: any }) {
                       </div>
                     )}
                   </form.Field>
+                </div>
+
+                {/* Separador y Política de Devolución */}
+                <div className="border-t pt-4 mt-4">
+                  <h5 className="font-medium text-green-700 mb-3 flex items-center gap-2">
+                    <span className="p-1 rounded bg-green-100">💰</span>
+                    Política de Devolución por Baja
+                  </h5>
+                  <p className="text-xs text-muted-foreground mb-4">
+                    Configura hasta qué mes se devuelve dinero si el acampante se da de baja del plan.
+                  </p>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <form.Field name="mesLimiteDevolucion100">
+                      {(field: any) => (
+                        <div className="space-y-2">
+                          <Label className="flex items-center gap-2">
+                            <span className="w-3 h-3 rounded-full bg-green-500"></span>
+                            100% Devolución hasta
+                          </Label>
+                          <Select value={String(field.state.value)} onValueChange={(v) => field.handleChange(Number(v))}>
+                            <SelectTrigger className="border-l-4 border-l-green-500">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {MESES.map(m => <SelectItem key={m.val} value={String(m.val)}>{m.label}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
+                    </form.Field>
+
+                    <form.Field name="mesLimiteDevolucion50">
+                      {(field: any) => (
+                        <div className="space-y-2">
+                          <Label className="flex items-center gap-2">
+                            <span className="w-3 h-3 rounded-full bg-yellow-500"></span>
+                            50% Devolución hasta
+                          </Label>
+                          <Select value={String(field.state.value)} onValueChange={(v) => field.handleChange(Number(v))}>
+                            <SelectTrigger className="border-l-4 border-l-yellow-500">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {MESES.map(m => <SelectItem key={m.val} value={String(m.val)}>{m.label}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
+                    </form.Field>
+                  </div>
+
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Después del mes de 50%, no se realiza devolución (0%).
+                  </p>
                 </div>
               </CardContent>
             </Card>

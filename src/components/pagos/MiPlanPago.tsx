@@ -12,14 +12,15 @@ import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { Progress } from "../ui/progress";
 import { Separator } from "../ui/separator";
-import { 
-  CheckCircle2, 
-  Clock, 
-  AlertTriangle, 
+import {
+  CheckCircle2,
+  Clock,
+  AlertTriangle,
   Calendar,
   TrendingUp,
   ArrowRight,
-  Info
+  Info,
+  UserX
 } from "lucide-react";
 import { type Inscripcion, type Cuota } from "../../api/schemas/pagos";
 import { format } from "date-fns";
@@ -28,7 +29,7 @@ import { es } from "date-fns/locale";
 // Mapa de meses en español
 const MESES_ES: Record<string, string> = {
   JANUARY: 'Enero',
-  FEBRUARY: 'Febrero', 
+  FEBRUARY: 'Febrero',
   MARCH: 'Marzo',
   APRIL: 'Abril',
   MAY: 'Mayo',
@@ -51,24 +52,31 @@ interface MiPlanPagoProps {
   inscripcion: Inscripcion;
   onPagarCuota: (cuota: Cuota) => void;
   pagandoCuotaId: number | null;
+  // Solicitud de baja
+  onSolicitarBaja?: () => void;
+  puedeSerDadoDeBaja?: boolean;
 }
 
-export function MiPlanPago({ inscripcion, onPagarCuota, pagandoCuotaId }: MiPlanPagoProps) {
+export function MiPlanPago({ inscripcion, onPagarCuota, pagandoCuotaId, onSolicitarBaja, puedeSerDadoDeBaja = true }: MiPlanPagoProps) {
   const cuotasOrdenadas = [...inscripcion.cuotas].sort((a, b) => a.secuencia - b.secuencia);
 
   return (
     <div className="space-y-6">
       {/* Sección 1: Resumen del Plan */}
-      <ResumenPlan inscripcion={inscripcion} />
-      
+      <ResumenPlan
+        inscripcion={inscripcion}
+        onSolicitarBaja={onSolicitarBaja}
+        puedeSerDadoDeBaja={puedeSerDadoDeBaja}
+      />
+
       {/* Sección 2: Stepper de Transición (solo si hay reglas definidas) */}
       {inscripcion.mesInicioControlAtraso && (
         <StepperTransicion inscripcion={inscripcion} />
       )}
-      
+
       {/* Sección 3: Lista de Cuotas */}
-      <ListaCuotas 
-        cuotas={cuotasOrdenadas} 
+      <ListaCuotas
+        cuotas={cuotasOrdenadas}
         onPagar={onPagarCuota}
         pagandoId={pagandoCuotaId}
       />
@@ -80,7 +88,15 @@ export function MiPlanPago({ inscripcion, onPagarCuota, pagandoCuotaId }: MiPlan
 // Sección 1: Resumen del Plan
 // ============================================================
 
-function ResumenPlan({ inscripcion }: { inscripcion: Inscripcion }) {
+function ResumenPlan({
+  inscripcion,
+  onSolicitarBaja,
+  puedeSerDadoDeBaja = true
+}: {
+  inscripcion: Inscripcion;
+  onSolicitarBaja?: () => void;
+  puedeSerDadoDeBaja?: boolean;
+}) {
   const {
     nombrePlan,
     estado,
@@ -93,19 +109,20 @@ function ResumenPlan({ inscripcion }: { inscripcion: Inscripcion }) {
   } = inscripcion;
 
   const progreso = totalCuotas > 0 ? (cuotasPagadas / totalCuotas) * 100 : 0;
+  const esActiva = estado === 'ACTIVA';
   // mesAlta puede venir como string ("DECEMBER") o número (12)
-  const mesAltaEs = mesAlta 
-    ? (typeof mesAlta === 'number' 
-        ? MESES_NUMERO[mesAlta] || `Mes ${mesAlta}`
-        : MESES_ES[mesAlta] || mesAlta
-      ) 
+  const mesAltaEs = mesAlta
+    ? (typeof mesAlta === 'number'
+      ? MESES_NUMERO[mesAlta] || `Mes ${mesAlta}`
+      : MESES_ES[mesAlta] || mesAlta
+    )
     : 'N/A';
 
   return (
     <Card className="relative overflow-hidden">
       {/* Gradient accent */}
       <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-primary/80 to-primary/50" />
-      
+
       <CardHeader className="pb-2">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
           <div>
@@ -117,7 +134,7 @@ function ResumenPlan({ inscripcion }: { inscripcion: Inscripcion }) {
               Inscripto desde <span className="font-medium">{mesAltaEs}</span>
             </p>
           </div>
-          <Badge 
+          <Badge
             variant={estado === 'ACTIVA' ? 'default' : 'secondary'}
             className="w-fit text-sm px-3 py-1"
           >
@@ -125,7 +142,7 @@ function ResumenPlan({ inscripcion }: { inscripcion: Inscripcion }) {
           </Badge>
         </div>
       </CardHeader>
-      
+
       <CardContent className="space-y-4">
         {/* Barra de Progreso */}
         <div className="space-y-2">
@@ -135,34 +152,34 @@ function ResumenPlan({ inscripcion }: { inscripcion: Inscripcion }) {
           </div>
           <Progress value={progreso} className="h-3" />
         </div>
-        
+
         <Separator />
-        
+
         {/* Stats Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <StatCard 
+          <StatCard
             icon={<CheckCircle2 className="w-5 h-5 text-green-600" />}
             label="Cuotas Pagadas"
             value={`${cuotasPagadas} de ${totalCuotas}`}
           />
-          <StatCard 
+          <StatCard
             icon={<Clock className="w-5 h-5 text-blue-600" />}
             label="Cuotas Restantes"
             value={String(totalCuotas - cuotasPagadas)}
           />
-          <StatCard 
+          <StatCard
             icon={<TrendingUp className="w-5 h-5 text-primary" />}
             label="Monto Pagado"
             value={`$${Number(montoPagado).toLocaleString('es-AR')}`}
           />
-          <StatCard 
+          <StatCard
             icon={cuotasVencidas > 0 ? <AlertTriangle className="w-5 h-5 text-orange-500" /> : <Calendar className="w-5 h-5 text-muted-foreground" />}
             label="Monto Restante"
             value={`$${Number(montoTotal - montoPagado).toLocaleString('es-AR')}`}
             highlight={cuotasVencidas > 0}
           />
         </div>
-        
+
         {/* Alerta si hay cuotas vencidas */}
         {cuotasVencidas > 0 && (
           <div className="bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800 rounded-lg p-3 flex items-start gap-3">
@@ -177,28 +194,41 @@ function ResumenPlan({ inscripcion }: { inscripcion: Inscripcion }) {
             </div>
           </div>
         )}
+
+        {/* Opción de solicitar baja - solo si está activa y tiene permisos */}
+        {esActiva && puedeSerDadoDeBaja && onSolicitarBaja && (
+          <div className="pt-4 border-t mt-4">
+            <button
+              type="button"
+              onClick={onSolicitarBaja}
+              className="text-sm text-muted-foreground hover:text-orange-600 transition-colors flex items-center gap-2"
+            >
+              <UserX className="w-4 h-4" />
+              Solicitar baja del plan
+            </button>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
 }
 
-function StatCard({ 
-  icon, 
-  label, 
-  value, 
-  highlight = false 
-}: { 
-  icon: React.ReactNode; 
-  label: string; 
+function StatCard({
+  icon,
+  label,
+  value,
+  highlight = false
+}: {
+  icon: React.ReactNode;
+  label: string;
   value: string;
   highlight?: boolean;
 }) {
   return (
-    <div className={`p-3 rounded-lg border ${
-      highlight 
-        ? 'border-orange-200 bg-orange-50/50 dark:border-orange-800 dark:bg-orange-950/20' 
-        : 'border-border bg-muted/30'
-    }`}>
+    <div className={`p-3 rounded-lg border ${highlight
+      ? 'border-orange-200 bg-orange-50/50 dark:border-orange-800 dark:bg-orange-950/20'
+      : 'border-border bg-muted/30'
+      }`}>
       <div className="flex items-center gap-2 mb-1">
         {icon}
         <span className="text-xs text-muted-foreground">{label}</span>
@@ -239,53 +269,52 @@ function StepperTransicion({ inscripcion }: { inscripcion: Inscripcion }) {
         {/* Stepper Visual */}
         <div className="flex items-center justify-between gap-2 py-4 px-2 overflow-x-auto">
           {/* Paso 1: Pagos al día */}
-          <StepperPaso 
+          <StepperPaso
             numero={1}
             titulo="Pagos al día"
             descripcion={`${cuotasMinimasAntesControl} cuotas antes de ${mesControl}`}
             estado={enBuenEstado ? 'completado' : 'pendiente'}
           />
-          
+
           <ArrowRight className="w-6 h-6 text-muted-foreground flex-shrink-0" />
-          
+
           {/* Paso 2: Mes de Control */}
-          <StepperPaso 
+          <StepperPaso
             numero={2}
             titulo="Control"
             descripcion={mesControl}
             estado="info"
             highlight
           />
-          
+
           <ArrowRight className="w-6 h-6 text-muted-foreground flex-shrink-0" />
-          
+
           {/* Paso 3: Tolerancia */}
-          <StepperPaso 
+          <StepperPaso
             numero={3}
             titulo="Tolerancia"
             descripcion={`${mesesAtrasoParaTransicion} meses`}
             estado="warning"
           />
-          
+
           <ArrowRight className="w-6 h-6 text-muted-foreground flex-shrink-0" />
-          
+
           {/* Paso 4: Plan B */}
-          <StepperPaso 
+          <StepperPaso
             numero={4}
             titulo={planDestinoCodigo || "Plan B"}
             descripcion="Migración"
             estado="danger"
           />
         </div>
-        
+
         <Separator />
-        
+
         {/* Estado actual del usuario */}
-        <div className={`p-4 rounded-lg ${
-          enBuenEstado 
-            ? 'bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800' 
-            : 'bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800'
-        }`}>
+        <div className={`p-4 rounded-lg ${enBuenEstado
+          ? 'bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800'
+          : 'bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800'
+          }`}>
           <p className="font-medium flex items-center gap-2">
             {enBuenEstado ? (
               <>
@@ -300,13 +329,13 @@ function StepperTransicion({ inscripcion }: { inscripcion: Inscripcion }) {
             )}
           </p>
           <p className="text-sm mt-1 text-muted-foreground">
-            {enBuenEstado 
+            {enBuenEstado
               ? `Ya tenés ${cuotasPagadas} cuotas pagadas. Cumplís con el mínimo de ${cuotasMinimasAntesControl} antes de ${mesControl}.`
               : `Te faltan ${cuotasFaltantes} cuota${cuotasFaltantes > 1 ? 's' : ''} para cumplir el mínimo de ${cuotasMinimasAntesControl} antes de ${mesControl}.`
             }
           </p>
         </div>
-        
+
         {/* Explicación detallada */}
         <div className="text-sm text-muted-foreground space-y-1 bg-muted/30 p-3 rounded-md">
           <p>• A partir de <strong>{mesControl}</strong>, comenzamos a controlar los pagos.</p>
@@ -318,15 +347,15 @@ function StepperTransicion({ inscripcion }: { inscripcion: Inscripcion }) {
   );
 }
 
-function StepperPaso({ 
-  numero, 
-  titulo, 
-  descripcion, 
+function StepperPaso({
+  numero,
+  titulo,
+  descripcion,
   estado,
   highlight = false
-}: { 
-  numero: number; 
-  titulo: string; 
+}: {
+  numero: number;
+  titulo: string;
   descripcion: string;
   estado: 'completado' | 'pendiente' | 'info' | 'warning' | 'danger';
   highlight?: boolean;
@@ -354,12 +383,12 @@ function StepperPaso({
 // Sección 3: Lista de Cuotas
 // ============================================================
 
-function ListaCuotas({ 
-  cuotas, 
-  onPagar, 
-  pagandoId 
-}: { 
-  cuotas: Cuota[]; 
+function ListaCuotas({
+  cuotas,
+  onPagar,
+  pagandoId
+}: {
+  cuotas: Cuota[];
   onPagar: (cuota: Cuota) => void;
   pagandoId: number | null;
 }) {
@@ -379,9 +408,9 @@ function ListaCuotas({
             </p>
           ) : (
             cuotas.map((cuota) => (
-              <CuotaCard 
-                key={cuota.secuencia} 
-                cuota={cuota} 
+              <CuotaCard
+                key={cuota.secuencia}
+                cuota={cuota}
                 onPagar={onPagar}
                 pagando={pagandoId === cuota.secuencia}
               />
@@ -393,46 +422,44 @@ function ListaCuotas({
   );
 }
 
-function CuotaCard({ 
-  cuota, 
+function CuotaCard({
+  cuota,
   onPagar,
-  pagando 
-}: { 
-  cuota: Cuota; 
+  pagando
+}: {
+  cuota: Cuota;
   onPagar: (cuota: Cuota) => void;
   pagando: boolean;
 }) {
   const isPagada = cuota.estado === 'PAGADA';
   const isVencida = cuota.estado === 'VENCIDA';
-  
-  const fechaVenc = cuota.fechaVencimiento 
+
+  const fechaVenc = cuota.fechaVencimiento
     ? format(new Date(cuota.fechaVencimiento), "d 'de' MMMM", { locale: es })
     : 'Sin fecha';
-  
-  const fechaPago = cuota.fechaPago 
+
+  const fechaPago = cuota.fechaPago
     ? format(new Date(cuota.fechaPago), "dd/MM/yyyy", { locale: es })
     : null;
 
   return (
-    <div className={`flex items-center justify-between p-4 rounded-lg border transition-colors ${
-      isPagada 
-        ? 'bg-green-50/50 border-green-200 dark:bg-green-950/20 dark:border-green-800' 
-        : isVencida 
-          ? 'bg-orange-50/50 border-orange-200 dark:bg-orange-950/20 dark:border-orange-800'
-          : 'bg-card border-border hover:bg-muted/50'
-    }`}>
+    <div className={`flex items-center justify-between p-4 rounded-lg border transition-colors ${isPagada
+      ? 'bg-green-50/50 border-green-200 dark:bg-green-950/20 dark:border-green-800'
+      : isVencida
+        ? 'bg-orange-50/50 border-orange-200 dark:bg-orange-950/20 dark:border-orange-800'
+        : 'bg-card border-border hover:bg-muted/50'
+      }`}>
       <div className="flex items-center gap-4">
         {/* Número de cuota */}
-        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${
-          isPagada 
-            ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' 
-            : isVencida 
-              ? 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300'
-              : 'bg-primary/10 text-primary'
-        }`}>
+        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${isPagada
+          ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
+          : isVencida
+            ? 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300'
+            : 'bg-primary/10 text-primary'
+          }`}>
           {isPagada ? <CheckCircle2 className="w-5 h-5" /> : `#${cuota.secuencia}`}
         </div>
-        
+
         {/* Info de la cuota */}
         <div>
           <p className="font-medium">
@@ -447,7 +474,7 @@ function CuotaCard({
           </p>
         </div>
       </div>
-      
+
       <div className="flex items-center gap-4">
         {/* Monto */}
         <div className="text-right">
@@ -455,15 +482,15 @@ function CuotaCard({
             ${Number(cuota.monto).toLocaleString('es-AR')}
           </p>
         </div>
-        
+
         {/* Badge de estado o botón de pagar */}
         {isPagada ? (
           <Badge variant="default" className="bg-green-600">
             Pagada
           </Badge>
         ) : (
-          <Button 
-            size="sm" 
+          <Button
+            size="sm"
             variant={isVencida ? "destructive" : "default"}
             onClick={() => onPagar(cuota)}
             disabled={pagando}

@@ -58,7 +58,7 @@ export const PlanPagoSchema = object({
   anio: number(),
   // Transform complex money object to simple number if needed, or accept number directly
   montoTotal: union([
-    number(), 
+    number(),
     pipe(
       MoneyJsonSchema,
       transform((input) => input.parsedValue)
@@ -70,11 +70,11 @@ export const PlanPagoSchema = object({
   estrategia: optional(EstrategiaPlanSchema),
   audiencia: optional(enum_(AudienciaPlan)),
   // Recursively optional planDestino or just any for now to avoid complexity
-  planDestino: optional(any()), 
+  planDestino: optional(any()),
   minCuotas: optional(number()),
   maxCuotas: optional(number()),
-  mesInicio: MonthSchema, 
-  mesFin: MonthSchema,    
+  mesInicio: MonthSchema,
+  mesFin: MonthSchema,
   activo: boolean(),
   // Campos de vinculación Plan A → Plan B
   planDestinoId: optional(nullable(number())),
@@ -82,6 +82,9 @@ export const PlanPagoSchema = object({
   mesInicioControlAtraso: optional(nullable(number())),
   cuotasMinimasAntesControl: optional(nullable(number())),
   mesesAtrasoParaTransicion: optional(nullable(number())),
+  // Política de devolución por baja
+  mesLimiteDevolucion100: optional(nullable(number())),
+  mesLimiteDevolucion50: optional(nullable(number())),
 });
 
 export type PlanPago = InferOutput<typeof PlanPagoSchema>;
@@ -106,16 +109,20 @@ export const PlanPagoRequestSchema = object({
   activo: boolean(),
   // Audiencia del plan
   audiencia: optional(enum_(AudienciaPlan)),
-  
+
   // Campos para crear Plan B automáticamente (solo cuando estrategia = PLAN_A)
   montoTotalPlanB: optional(number()),
   codigoPlanB: optional(string()),
   nombrePlanB: optional(string()),
-  
+
   // Reglas de transición
   mesInicioControlAtraso: optional(number()),      // Mes a partir del cual aplica control de atraso (ej: 7 = Julio)
   cuotasMinimasAntesControl: optional(number()),   // Cuotas mínimas antes del mes de control
   mesesAtrasoParaTransicion: optional(number()),   // Meses de atraso para activar transición (default: 2)
+
+  // Política de devolución por baja
+  mesLimiteDevolucion100: optional(number()),      // Hasta este mes: 100% devolución
+  mesLimiteDevolucion50: optional(number()),       // Hasta este mes: 50% devolución
 });
 
 export type PlanPagoRequest = InferOutput<typeof PlanPagoRequestSchema>;
@@ -129,7 +136,7 @@ export const CuotaSchema = object({
   secuencia: number(), // Backend usa "secuencia", no "nroCuota"
   fechaVencimiento: string(), // Backend usa "fechaVencimiento", no "vencimiento"
   monto: union([
-    number(), 
+    number(),
     pipe(
       MoneyJsonSchema,
       transform((input) => input.parsedValue)
@@ -139,7 +146,7 @@ export const CuotaSchema = object({
   fechaPago: optional(nullable(string())),
   metodoPago: optional(nullable(string())),
   notasAdministrativas: optional(nullable(string())),
-  
+
   // Alias para compatibilidad con componentes existentes
   nroCuota: optional(number()), // Deprecated, usar secuencia
 });
@@ -154,12 +161,12 @@ export const InscripcionSchema = object({
   idInscripcion: number(),
   cuotas: array(CuotaSchema),
   estado: string(),
-  
+
   // Información del plan
   nombrePlan: optional(string()),
   codigoPlan: optional(string()),
   montoTotal: optional(union([
-    number(), 
+    number(),
     pipe(
       MoneyJsonSchema,
       transform((input) => input.parsedValue)
@@ -168,32 +175,32 @@ export const InscripcionSchema = object({
   totalCuotas: optional(number()),
   // mesAlta puede venir como string ("DECEMBER") o número (12)
   mesAlta: optional(union([string(), number()])),
-  
+
   // Estadísticas de progreso
   cuotasPagadas: optional(number()),
   cuotasPendientes: optional(number()),
   cuotasVencidas: optional(number()),
   montoPagado: optional(union([
-    number(), 
+    number(),
     pipe(
       MoneyJsonSchema,
       transform((input) => input.parsedValue)
     )
   ])),
   montoRestante: optional(union([
-    number(), 
+    number(),
     pipe(
       MoneyJsonSchema,
       transform((input) => input.parsedValue)
     )
   ])),
-  
+
   // Reglas de transición (solo para Plan A)
   mesInicioControlAtraso: optional(nullable(number())),
   cuotasMinimasAntesControl: optional(nullable(number())),
   mesesAtrasoParaTransicion: optional(nullable(number())),
   planDestinoCodigo: optional(nullable(string())),
-  
+
   // Legacy fields for backwards compatibility
   plan: optional(PlanPagoSchema),
   fechaInscripcion: optional(string()),
@@ -235,7 +242,7 @@ export type IntencionPagoRequest = InferOutput<typeof IntencionPagoRequestSchema
 export const IntencionPagoResponseSchema = object({
   id: number(),
   preferenceId: optional(nullable(string())),
-  urlRedireccion: optional(nullable(string())), 
+  urlRedireccion: optional(nullable(string())),
   monto: optional(number()), // Backend does not return this currently
   idInscripcion: number(),
   estado: optional(string())
@@ -277,15 +284,15 @@ export const InscripcionAdminSchema = object({
   totalCuotas: number(),
   cuotasVencidas: number(),
   montoPagado: union([
-    number(), 
+    number(),
     pipe(MoneyJsonSchema, transform((input) => input.parsedValue))
   ]),
   montoTotal: union([
-    number(), 
+    number(),
     pipe(MoneyJsonSchema, transform((input) => input.parsedValue))
   ]),
   montoRestante: union([
-    number(), 
+    number(),
     pipe(MoneyJsonSchema, transform((input) => input.parsedValue))
   ]),
   proximoVencimiento: optional(nullable(string())),
@@ -298,11 +305,11 @@ export type InscripcionAdmin = InferOutput<typeof InscripcionAdminSchema>;
 // Financial summary for dashboard (matches ResumenFinancieroResponse.java)
 export const ResumenFinancieroSchema = object({
   recaudacionTotal: union([
-    number(), 
+    number(),
     pipe(MoneyJsonSchema, transform((input) => input.parsedValue))
   ]),
   recaudacionPendiente: union([
-    number(), 
+    number(),
     pipe(MoneyJsonSchema, transform((input) => input.parsedValue))
   ]),
   tasaMorosidad: number(),
@@ -327,4 +334,65 @@ export interface AdminInscripcionFilters {
   estadoInscripcion?: EstadoInscripcion;
   estadoFinanciero?: EstadoFinanciero;
   q?: string;
+}
+
+// ============================================
+// Schemas: Solicitud de Baja
+// ============================================
+
+export enum EstadoSolicitudBaja {
+  PENDIENTE = 'PENDIENTE',
+  APROBADA = 'APROBADA',
+  PROCESADA = 'PROCESADA',
+  RECHAZADA = 'RECHAZADA'
+}
+
+export const SolicitudBajaSchema = object({
+  id: number(),
+  inscripcionId: number(),
+  mesAviso: number(),
+  porcentajeDevolucion: number(),
+  montoPagado: union([
+    number(),
+    pipe(MoneyJsonSchema, transform((input) => input.parsedValue))
+  ]),
+  montoADevolver: union([
+    number(),
+    pipe(MoneyJsonSchema, transform((input) => input.parsedValue))
+  ]),
+  estado: string(),
+  creadoEn: optional(nullable(string())),
+});
+
+export type SolicitudBaja = InferOutput<typeof SolicitudBajaSchema>;
+
+// Admin version with more details
+export const SolicitudBajaAdminSchema = object({
+  id: number(),
+  inscripcionId: number(),
+  solicitanteUid: string(),
+  mesAviso: number(),
+  porcentajeDevolucion: number(),
+  montoPagado: union([
+    number(),
+    pipe(MoneyJsonSchema, transform((input) => input.parsedValue))
+  ]),
+  montoADevolver: union([
+    number(),
+    pipe(MoneyJsonSchema, transform((input) => input.parsedValue))
+  ]),
+  estado: string(),
+  motivo: optional(nullable(string())),
+  notasTesorero: optional(nullable(string())),
+  procesadoPorUid: optional(nullable(string())),
+  creadoEn: optional(nullable(string())),
+  procesadoEn: optional(nullable(string())),
+  codigoPlan: string(),
+  nombrePlan: string(),
+});
+
+export type SolicitudBajaAdmin = InferOutput<typeof SolicitudBajaAdminSchema>;
+
+export interface SolicitudBajaRequest {
+  motivo?: string;
 }

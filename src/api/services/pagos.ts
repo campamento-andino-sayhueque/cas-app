@@ -6,14 +6,16 @@
 
 import { parse, array } from 'valibot';
 import { client } from '../client';
-import { 
-  PlanPagoSchema, 
+import {
+  PlanPagoSchema,
   InscripcionSchema,
   CuotaSchema,
   IntencionPagoResponseSchema,
   InscripcionAdminSchema,
   ResumenFinancieroSchema,
-  type PlanPago, 
+  SolicitudBajaSchema,
+  SolicitudBajaAdminSchema,
+  type PlanPago,
   type PlanPagoRequest,
   type Inscripcion,
   type InscripcionRequest,
@@ -23,7 +25,9 @@ import {
   type InscripcionAdmin,
   type ResumenFinanciero,
   type RegistroPagoManualRequest,
-  type AdminInscripcionFilters
+  type AdminInscripcionFilters,
+  type SolicitudBaja,
+  type SolicitudBajaAdmin
 } from '../schemas/pagos';
 
 const PlanesSchema = array(PlanPagoSchema);
@@ -32,7 +36,7 @@ const CuotasSchema = array(CuotaSchema);
 const InscripcionesAdminSchema = array(InscripcionAdminSchema);
 
 export const pagosService = {
-  
+
   // ============================================
   // Administración de Planes (CONSEJO/ADMIN)
   // ============================================
@@ -45,16 +49,16 @@ export const pagosService = {
    */
   listarPlanes: async (): Promise<PlanPago[]> => {
     const response = await client.get('/pagos/planes');
-    
+
     // HATEOAS handling
     if (response.data?._embedded?.planPagoModels) {
       return parse(PlanesSchema, response.data._embedded.planPagoModels);
     }
-    
+
     if (Array.isArray(response.data)) {
       return parse(PlanesSchema, response.data);
     }
-    
+
     return [];
   },
 
@@ -87,16 +91,16 @@ export const pagosService = {
    */
   listarTodos: async (): Promise<PlanPago[]> => {
     const response = await client.get('/admin/planes');
-    
+
     // HATEOAS handling
     if (response.data?._embedded?.planPagoModels) {
       return parse(PlanesSchema, response.data._embedded.planPagoModels);
     }
-    
+
     if (Array.isArray(response.data)) {
       return parse(PlanesSchema, response.data);
     }
-    
+
     return [];
   },
 
@@ -133,7 +137,7 @@ export const pagosService = {
    */
   listarMisInscripciones: async (): Promise<Inscripcion[]> => {
     const response = await client.get('/pagos/inscripciones/mis');
-    
+
     // HATEOAS handling
     if (response.data?._embedded?.inscripcionResponses) {
       return parse(InscripcionesSchema, response.data._embedded.inscripcionResponses);
@@ -142,7 +146,7 @@ export const pagosService = {
     if (Array.isArray(response.data)) {
       return parse(InscripcionesSchema, response.data);
     }
-    
+
     return [];
   },
 
@@ -152,7 +156,7 @@ export const pagosService = {
    */
   listarInscripcionesHijos: async (): Promise<Inscripcion[]> => {
     const response = await client.get('/pagos/inscripciones/hijos');
-    
+
     // HATEOAS handling
     if (response.data?._embedded?.inscripcionResponses) {
       return parse(InscripcionesSchema, response.data._embedded.inscripcionResponses);
@@ -161,7 +165,7 @@ export const pagosService = {
     if (Array.isArray(response.data)) {
       return parse(InscripcionesSchema, response.data);
     }
-    
+
     return [];
   },
 
@@ -170,7 +174,7 @@ export const pagosService = {
    */
   obtenerCuotas: async (idInscripcion: number): Promise<Cuota[]> => {
     const response = await client.get(`/pagos/inscripciones/${idInscripcion}/cuotas`);
-    
+
     // HATEOAS handling
     if (response.data?._embedded?.cuotaModels) {
       return parse(CuotasSchema, response.data._embedded.cuotaModels);
@@ -200,16 +204,16 @@ export const pagosService = {
    */
   listarInscripcionesAdmin: async (filters?: AdminInscripcionFilters): Promise<InscripcionAdmin[]> => {
     const response = await client.get('/admin/inscripciones', { params: filters });
-    
+
     // HATEOAS handling
     if (response.data?._embedded?.inscripciones) {
       return parse(InscripcionesAdminSchema, response.data._embedded.inscripciones);
     }
-    
+
     if (Array.isArray(response.data)) {
       return parse(InscripcionesAdminSchema, response.data);
     }
-    
+
     return [];
   },
 
@@ -226,15 +230,15 @@ export const pagosService = {
    */
   listarMigraciones: async (): Promise<InscripcionAdmin[]> => {
     const response = await client.get('/admin/inscripciones/migraciones');
-    
+
     if (response.data?._embedded?.inscripciones) {
       return parse(InscripcionesAdminSchema, response.data._embedded.inscripciones);
     }
-    
+
     if (Array.isArray(response.data)) {
       return parse(InscripcionesAdminSchema, response.data);
     }
-    
+
     return [];
   },
 
@@ -251,5 +255,60 @@ export const pagosService = {
    */
   registrarPagoManual: async (request: RegistroPagoManualRequest): Promise<void> => {
     await client.post('/admin/pagos/manual', request);
+  },
+
+  // ============================================
+  // Solicitudes de Baja
+  // ============================================
+
+  /**
+   * Solicita la baja de una inscripción
+   */
+  solicitarBaja: async (inscripcionId: number, motivo?: string): Promise<SolicitudBaja> => {
+    const response = await client.post(`/pagos/inscripciones/${inscripcionId}/solicitar-baja`, { motivo });
+    return parse(SolicitudBajaSchema, response.data);
+  },
+
+  /**
+   * Lista solicitudes de baja (Admin)
+   */
+  listarSolicitudesBaja: async (estado?: string): Promise<SolicitudBajaAdmin[]> => {
+    const response = await client.get('/admin/solicitudes-baja', { params: estado ? { estado } : {} });
+    if (Array.isArray(response.data)) {
+      return parse(array(SolicitudBajaAdminSchema), response.data);
+    }
+    return [];
+  },
+
+  /**
+   * Cuenta solicitudes pendientes (Admin)
+   */
+  contarSolicitudesPendientes: async (): Promise<number> => {
+    const response = await client.get('/admin/solicitudes-baja/pendientes/count');
+    return response.data?.pendientes ?? 0;
+  },
+
+  /**
+   * Aprueba una solicitud de baja (Admin)
+   */
+  aprobarSolicitudBaja: async (id: number, notas?: string): Promise<SolicitudBajaAdmin> => {
+    const response = await client.post(`/admin/solicitudes-baja/${id}/aprobar`, { notas });
+    return parse(SolicitudBajaAdminSchema, response.data);
+  },
+
+  /**
+   * Procesa devolución de una solicitud aprobada (Admin)
+   */
+  procesarDevolucion: async (id: number, referenciaPago?: string): Promise<SolicitudBajaAdmin> => {
+    const response = await client.post(`/admin/solicitudes-baja/${id}/procesar`, { referenciaPago });
+    return parse(SolicitudBajaAdminSchema, response.data);
+  },
+
+  /**
+   * Rechaza una solicitud de baja (Admin)
+   */
+  rechazarSolicitudBaja: async (id: number, motivo: string): Promise<SolicitudBajaAdmin> => {
+    const response = await client.post(`/admin/solicitudes-baja/${id}/rechazar`, { notas: motivo });
+    return parse(SolicitudBajaAdminSchema, response.data);
   }
 };
