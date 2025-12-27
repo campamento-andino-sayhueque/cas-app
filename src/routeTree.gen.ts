@@ -17,6 +17,7 @@ import { Route as AuthTesoreriaRouteImport } from './routes/_auth.tesoreria'
 import { Route as AuthPlanesRouteImport } from './routes/_auth.planes'
 import { Route as AuthPerfilRouteImport } from './routes/_auth.perfil'
 import { Route as AuthPagosRouteImport } from './routes/_auth.pagos'
+import { Route as AuthOnboardingRouteImport } from './routes/_auth.onboarding'
 import { Route as AuthGruposRouteImport } from './routes/_auth.grupos'
 import { Route as AuthDefinicionPlanesRouteImport } from './routes/_auth.definicion-planes'
 import { Route as AuthDashboardRouteImport } from './routes/_auth.dashboard'
@@ -63,6 +64,11 @@ const AuthPagosRoute = AuthPagosRouteImport.update({
   path: '/pagos',
   getParentRoute: () => AuthRoute,
 } as any)
+const AuthOnboardingRoute = AuthOnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
+  getParentRoute: () => AuthRoute,
+} as any)
 const AuthGruposRoute = AuthGruposRouteImport.update({
   id: '/grupos',
   path: '/grupos',
@@ -104,6 +110,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthDashboardRoute
   '/definicion-planes': typeof AuthDefinicionPlanesRoute
   '/grupos': typeof AuthGruposRoute
+  '/onboarding': typeof AuthOnboardingRoute
   '/pagos': typeof AuthPagosRoute
   '/perfil': typeof AuthPerfilRoute
   '/planes': typeof AuthPlanesRoute
@@ -119,6 +126,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthDashboardRoute
   '/definicion-planes': typeof AuthDefinicionPlanesRoute
   '/grupos': typeof AuthGruposRoute
+  '/onboarding': typeof AuthOnboardingRoute
   '/pagos': typeof AuthPagosRoute
   '/perfil': typeof AuthPerfilRoute
   '/planes': typeof AuthPlanesRoute
@@ -136,6 +144,7 @@ export interface FileRoutesById {
   '/_auth/dashboard': typeof AuthDashboardRoute
   '/_auth/definicion-planes': typeof AuthDefinicionPlanesRoute
   '/_auth/grupos': typeof AuthGruposRoute
+  '/_auth/onboarding': typeof AuthOnboardingRoute
   '/_auth/pagos': typeof AuthPagosRoute
   '/_auth/perfil': typeof AuthPerfilRoute
   '/_auth/planes': typeof AuthPlanesRoute
@@ -153,6 +162,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/definicion-planes'
     | '/grupos'
+    | '/onboarding'
     | '/pagos'
     | '/perfil'
     | '/planes'
@@ -168,6 +178,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/definicion-planes'
     | '/grupos'
+    | '/onboarding'
     | '/pagos'
     | '/perfil'
     | '/planes'
@@ -184,6 +195,7 @@ export interface FileRouteTypes {
     | '/_auth/dashboard'
     | '/_auth/definicion-planes'
     | '/_auth/grupos'
+    | '/_auth/onboarding'
     | '/_auth/pagos'
     | '/_auth/perfil'
     | '/_auth/planes'
@@ -255,6 +267,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthPagosRouteImport
       parentRoute: typeof AuthRoute
     }
+    '/_auth/onboarding': {
+      id: '/_auth/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof AuthOnboardingRouteImport
+      parentRoute: typeof AuthRoute
+    }
     '/_auth/grupos': {
       id: '/_auth/grupos'
       path: '/grupos'
@@ -307,6 +326,7 @@ interface AuthRouteChildren {
   AuthDashboardRoute: typeof AuthDashboardRoute
   AuthDefinicionPlanesRoute: typeof AuthDefinicionPlanesRoute
   AuthGruposRoute: typeof AuthGruposRoute
+  AuthOnboardingRoute: typeof AuthOnboardingRoute
   AuthPagosRoute: typeof AuthPagosRoute
   AuthPerfilRoute: typeof AuthPerfilRoute
   AuthPlanesRoute: typeof AuthPlanesRoute
@@ -320,6 +340,7 @@ const AuthRouteChildren: AuthRouteChildren = {
   AuthDashboardRoute: AuthDashboardRoute,
   AuthDefinicionPlanesRoute: AuthDefinicionPlanesRoute,
   AuthGruposRoute: AuthGruposRoute,
+  AuthOnboardingRoute: AuthOnboardingRoute,
   AuthPagosRoute: AuthPagosRoute,
   AuthPerfilRoute: AuthPerfilRoute,
   AuthPlanesRoute: AuthPlanesRoute,

@@ -29,6 +29,15 @@ export enum EstrategiaPlan {
 
 export const EstrategiaPlanSchema = enum_(EstrategiaPlan);
 
+// Audiencia del plan - a qué tipo de usuario va dirigido
+export enum AudienciaPlan {
+  ACAMPANTE = 'ACAMPANTE',    // Plan para acampantes/hijos
+  DIRIGENTE = 'DIRIGENTE',    // Plan para dirigentes
+  STAFF_BASE = 'STAFF_BASE'   // Plan para staff de base (padres en cocina, etc.)
+}
+
+export const AudienciaPlanSchema = enum_(AudienciaPlan);
+
 // Helper for Java Money JSON structure
 const MoneyJsonSchema = object({
   source: string(),
@@ -59,6 +68,7 @@ export const PlanPagoSchema = object({
   diaVencimiento: optional(number()), // Added
   montoCuotaFija: optional(number()), // Added
   estrategia: optional(EstrategiaPlanSchema),
+  audiencia: optional(enum_(AudienciaPlan)),
   // Recursively optional planDestino or just any for now to avoid complexity
   planDestino: optional(any()), 
   minCuotas: optional(number()),
@@ -94,6 +104,8 @@ export const PlanPagoRequestSchema = object({
   minCuotas: optional(number()),
   maxCuotas: optional(number()),
   activo: boolean(),
+  // Audiencia del plan
+  audiencia: optional(enum_(AudienciaPlan)),
   
   // Campos para crear Plan B automáticamente (solo cuando estrategia = PLAN_A)
   montoTotalPlanB: optional(number()),

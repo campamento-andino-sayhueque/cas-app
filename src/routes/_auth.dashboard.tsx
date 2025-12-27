@@ -1,6 +1,7 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { useAuth } from "../hooks/useAuth";
 import { Wallet, ChevronRight, Settings } from "lucide-react";
+import { FamiliaWidget } from "../components/familia/FamiliaWidget";
 
 export const Route = createFileRoute("/_auth/dashboard")({
   component: DashboardComponent,
@@ -21,6 +22,12 @@ function DashboardComponent() {
         <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
         <p className="text-muted-foreground">Bienvenido al campamento</p>
       </div>
+
+      {/* Mi Grupo Familiar - visible para todos */}
+      <section className="space-y-3">
+        <h2 className="text-lg font-semibold text-muted-foreground">Mi Familia</h2>
+        <FamiliaWidget />
+      </section>
 
       {/* Admin Quick Access */}
       {canAccessTesoreria && (
@@ -71,11 +78,7 @@ function DashboardComponent() {
           )}
         </section>
       )}
-
-      {/* Placeholder for other dashboard content */}
-      <section className="bg-muted/30 rounded-lg p-8 text-center text-muted-foreground">
-        <p>Más contenido del dashboard próximamente</p>
-      </section>
     </div>
   );
 }
+

@@ -9,6 +9,7 @@ import {
 import { ListaPlanesDisponibles } from '../components/pagos/ListaPlanesDisponibles';
 import { ModalInscripcion } from '../components/pagos/ModalInscripcion';
 import { MiPlanPago } from '../components/pagos/MiPlanPago';
+import { InscripcionesHijos } from '../components/pagos/InscripcionesHijos';
 import { type PlanPago, type InscripcionRequest, type Cuota } from '../api/schemas/pagos';
 import { toast } from 'sonner';
 import { type RouterContext } from './__root';
@@ -241,6 +242,9 @@ function RouteComponent() {
                 pagandoCuotaId={pagandoCuota}
             />
         ))}
+
+        {/* Sección para padres: ver inscripciones de hijos */}
+        <InscripcionesHijos />
     </div>
   );
 }

@@ -137,6 +137,24 @@ export function useMisInscripciones() {
   };
 }
 
+/**
+ * Hook para que los padres vean las inscripciones de sus hijos.
+ * Llama al endpoint /api/pagos/inscripciones/hijos
+ */
+export function useInscripcionesHijos() {
+  const query = useQuery({
+    queryKey: [...pagosKeys.inscripciones.mis, 'hijos'],
+    queryFn: () => pagosService.listarInscripcionesHijos()
+  });
+
+  return {
+    inscripciones: query.data || [],
+    cargando: query.isLoading,
+    error: query.error,
+    refetch: query.refetch
+  };
+}
+
 export function useInscribirse() {
   const queryClient = useQueryClient();
 

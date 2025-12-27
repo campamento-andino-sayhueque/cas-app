@@ -147,6 +147,25 @@ export const pagosService = {
   },
 
   /**
+   * Lista las inscripciones de los hijos del usuario actual.
+   * Útil para que padres/tutores vean y paguen cuotas de sus hijos.
+   */
+  listarInscripcionesHijos: async (): Promise<Inscripcion[]> => {
+    const response = await client.get('/pagos/inscripciones/hijos');
+    
+    // HATEOAS handling
+    if (response.data?._embedded?.inscripcionResponses) {
+      return parse(InscripcionesSchema, response.data._embedded.inscripcionResponses);
+    }
+
+    if (Array.isArray(response.data)) {
+      return parse(InscripcionesSchema, response.data);
+    }
+    
+    return [];
+  },
+
+  /**
    * Obtiene las cuotas de una inscripción
    */
   obtenerCuotas: async (idInscripcion: number): Promise<Cuota[]> => {
