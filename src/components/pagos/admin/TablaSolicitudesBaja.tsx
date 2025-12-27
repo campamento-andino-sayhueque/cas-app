@@ -4,7 +4,26 @@
  * Lista las solicitudes de baja pendientes y permite gestionarlas.
  */
 
+import {
+    AlertTriangle,
+    CheckCircle2,
+    Clock,
+    Eye,
+    Loader2,
+    XCircle
+} from 'lucide-react';
 import { useState } from 'react';
+import { type SolicitudBajaAdmin } from '../../../api/schemas/pagos';
+import { Badge } from '../../ui/badge';
+import { Button } from '../../ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '../../ui/select';
 import {
     Table,
     TableBody,
@@ -13,25 +32,6 @@ import {
     TableHeader,
     TableRow,
 } from '../../ui/table';
-import { Badge } from '../../ui/badge';
-import { Button } from '../../ui/button';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '../../ui/select';
-import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
-import {
-    CheckCircle2,
-    XCircle,
-    Clock,
-    Loader2,
-    Eye,
-    AlertTriangle
-} from 'lucide-react';
-import { type SolicitudBajaAdmin, EstadoSolicitudBaja } from '../../../api/schemas/pagos';
 import { GestionDevolucionDialog } from './GestionDevolucionDialog';
 
 const MESES_NOMBRE: Record<number, string> = {
@@ -208,9 +208,9 @@ export function TablaSolicitudesBaja({
                     onClose={() => setSolicitudSeleccionada(null)}
                     solicitud={solicitudSeleccionada}
                     procesando={procesando}
-                    onAprobar={(notas) => handleAccion('aprobar', { notas })}
-                    onProcesar={(referencia) => handleAccion('procesar', { referencia })}
-                    onRechazar={(motivo) => handleAccion('rechazar', { motivo })}
+                    onAprobar={(notas?: string) => handleAccion('aprobar', { notas })}
+                    onProcesar={(referencia?: string) => handleAccion('procesar', { referencia })}
+                    onRechazar={(motivo?: string) => handleAccion('rechazar', { motivo })}
                 />
             )}
         </Card>
