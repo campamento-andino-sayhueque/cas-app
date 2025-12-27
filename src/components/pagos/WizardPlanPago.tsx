@@ -11,9 +11,10 @@
 import { useForm } from "@tanstack/react-form";
 // Standard Schema support is native now
 import { defineStepper } from "@stepperize/react";
-import { 
-  type PlanPagoRequest, 
-  EstrategiaPlan 
+import {
+  type PlanPagoRequest,
+  EstrategiaPlan,
+  AudienciaPlan
 } from "../../api/schemas/pagos";
 import { Button } from "../ui/button";
 import {
@@ -33,14 +34,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-import { 
+import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "../ui/tooltip";
-import { 
-  InfoIcon, 
+import {
+  InfoIcon,
   CheckCircle2,
   LayoutList,
   DollarSign,
@@ -51,14 +52,14 @@ import {
 import React from 'react';
 import { Card, CardContent } from "../ui/card";
 import { Separator } from "../ui/separator";
-import { 
-  pipe, 
-  minLength, 
-  minValue, 
-  number, 
-  string, 
-  object, 
-  boolean, 
+import {
+  pipe,
+  minLength,
+  minValue,
+  number,
+  string,
+  object,
+  boolean,
   optional,
   safeParse
 } from "valibot";
@@ -151,7 +152,8 @@ function WizardPlanPagoContent({ abierto, onCerrar, onGuardar, cargando }: Wizar
     defaultValues: {
       codigo: "",
       anio: new Date().getFullYear(),
-      nombreParaMostrar: "",
+      nombreParaMostrar: "Plan A",
+      audiencia: AudienciaPlan.ACAMPANTE,
       montoTotal: 0,
       moneda: "ARS",
       estrategia: EstrategiaPlan.PLAN_A,
@@ -159,26 +161,26 @@ function WizardPlanPagoContent({ abierto, onCerrar, onGuardar, cargando }: Wizar
       montoCuotaFija: undefined,
       mesInicioHabilitado: 4, // Abril
       mesFinHabilitado: 1, // Enero
-      minCuotas: 10, 
+      minCuotas: 10,
       maxCuotas: 10,
       activo: true,
-      
+
       montoTotalPlanB: 0,
       codigoPlanB: "",
       nombrePlanB: "",
-      
+
       mesInicioControlAtraso: 7, // Julio
       cuotasMinimasAntesControl: 4,
       mesesAtrasoParaTransicion: 2,
     } as PlanPagoRequest,
     onSubmit: async ({ value }) => {
       const finalData = { ...value };
-      
+
       // Auto-calcular min/max cuotas basado en vigencia
       const start = finalData.mesInicioHabilitado;
       const end = finalData.mesFinHabilitado;
       const totalMonths = end >= start ? (end - start + 1) : (12 - start + 1) + end;
-      
+
       // Plan A es estricto: la cantidad de cuotas es igual a la cantidad de meses
       finalData.minCuotas = totalMonths;
       finalData.maxCuotas = totalMonths;
@@ -220,9 +222,9 @@ function WizardPlanPagoContent({ abierto, onCerrar, onGuardar, cargando }: Wizar
         const montoB = values.montoTotalPlanB || 0;
         if (montoB <= montoA) {
           form.setFieldMeta('montoTotalPlanB', (prev) => ({
-             ...prev, errorMap: { onChange: 'El monto del Plan B debe ser mayor al Plan A' },
-             errors: ['El monto del Plan B debe ser mayor al Plan A'],
-             isTouched: true,
+            ...prev, errorMap: { onChange: 'El monto del Plan B debe ser mayor al Plan A' },
+            errors: ['El monto del Plan B debe ser mayor al Plan A'],
+            isTouched: true,
           }));
           return;
         }
@@ -234,15 +236,15 @@ function WizardPlanPagoContent({ abierto, onCerrar, onGuardar, cargando }: Wizar
       result.issues.forEach((issue) => {
         const path = issue.path;
         if (path && path.length > 0) {
-            const firstItem = path[0] as any;
-            const fieldName = firstItem.key as string;
-            // @ts-ignore 
-            form.setFieldMeta(fieldName, (prev) => ({
-               ...prev,
-               errorMap: { onChange: issue.message, onBlur: issue.message },
-               errors: [issue.message],
-               isTouched: true,
-            }));
+          const firstItem = path[0] as any;
+          const fieldName = firstItem.key as string;
+          // @ts-ignore 
+          form.setFieldMeta(fieldName, (prev) => ({
+            ...prev,
+            errorMap: { onChange: issue.message, onBlur: issue.message },
+            errors: [issue.message],
+            isTouched: true,
+          }));
         }
       });
     }
@@ -253,12 +255,12 @@ function WizardPlanPagoContent({ abierto, onCerrar, onGuardar, cargando }: Wizar
   const handleConfirmar = () => {
     const { values } = form.state;
     const finalData = { ...values };
-    
+
     // Auto-calcular min/max cuotas basado en vigencia
     const start = finalData.mesInicioHabilitado;
     const end = finalData.mesFinHabilitado;
     const totalMonths = end >= start ? (end - start + 1) : (12 - start + 1) + end;
-    
+
     // Plan A es estricto: la cantidad de cuotas es igual a la cantidad de meses
     finalData.minCuotas = totalMonths;
     finalData.maxCuotas = totalMonths;
@@ -298,8 +300,8 @@ function WizardPlanPagoContent({ abierto, onCerrar, onGuardar, cargando }: Wizar
                       variant={isActiveOrCompleted ? 'default' : 'secondary'}
                       className="flex size-10 items-center justify-center rounded-full p-0"
                       onClick={() => {
-                         // Permitir navegar atrás libremente, pero adelante solo si ya pasaste
-                         if (index < currentIndex) stepper.goTo(step.id as any);
+                        // Permitir navegar atrás libremente, pero adelante solo si ya pasaste
+                        if (index < currentIndex) stepper.goTo(step.id as any);
                       }}
                     >
                       <Icon className="w-5 h-5" />
@@ -310,9 +312,8 @@ function WizardPlanPagoContent({ abierto, onCerrar, onGuardar, cargando }: Wizar
                   </li>
                   {index < array.length - 1 && (
                     <Separator
-                      className={`flex-1 h-[2px] ${
-                        index < currentIndex ? 'bg-primary' : 'bg-muted'
-                      }`}
+                      className={`flex-1 h-[2px] ${index < currentIndex ? 'bg-primary' : 'bg-muted'
+                        }`}
                     />
                   )}
                 </React.Fragment>
@@ -341,7 +342,7 @@ function WizardPlanPagoContent({ abierto, onCerrar, onGuardar, cargando }: Wizar
             <Button type="button" variant="outline" onClick={stepper.isFirst ? onCerrar : handleBack}>
               {stepper.isFirst ? "Cancelar" : "Atrás"}
             </Button>
-            
+
             {stepper.isLast ? (
               <Button type="button" onClick={handleConfirmar} disabled={cargando}>
                 {cargando ? "Guardando..." : "Confirmar y Crear"}
@@ -382,25 +383,60 @@ function StepDatosGenerales({ form }: { form: any }) {
       </div>
 
       <div className="space-y-4">
-        <form.Field 
-          name="nombreParaMostrar" 
+        <form.Field
+          name="nombreParaMostrar"
         >
           {(field: any) => (
             <div className="space-y-2">
               <Label htmlFor="nombre">Nombre del Plan</Label>
-              <Input 
-                id="nombre" 
+              <Input
+                id="nombre"
                 placeholder="Ej. Campamento Andino 2026"
-                value={field.state.value} 
-                onChange={e => field.handleChange(e.target.value)} 
+                value={field.state.value}
+                onChange={e => field.handleChange(e.target.value)}
                 onBlur={field.handleBlur}
                 className={field.state.meta.errors.length ? "border-red-500" : ""}
               />
               {field.state.meta.errors.length > 0 && (
-                 <p className="text-xs text-red-500">
-                   {Array.from(new Set(field.state.meta.errors.map((err: any) => typeof err === 'object' ? err.message : String(err)))).join(", ")}
-                 </p>
+                <p className="text-xs text-red-500">
+                  {Array.from(new Set(field.state.meta.errors.map((err: any) => typeof err === 'object' ? err.message : String(err)))).join(", ")}
+                </p>
               )}
+            </div>
+          )}
+        </form.Field>
+
+        {/* Audiencia Toggle Chips */}
+        <form.Field name="audiencia">
+          {(field: any) => (
+            <div className="space-y-2">
+              <Label>Audiencia del Plan</Label>
+              <div className="flex gap-2 flex-wrap">
+                {[
+                  { value: AudienciaPlan.ACAMPANTE, label: 'Acampante', icon: '🏕️', description: 'Hijos/Participantes' },
+                  { value: AudienciaPlan.DIRIGENTE, label: 'Dirigente', icon: '🎯', description: 'Líderes' },
+                  { value: AudienciaPlan.STAFF_BASE, label: 'Staff Base', icon: '👨‍🍳', description: 'Cocina/Voluntarios' },
+                ].map((opt) => {
+                  const isSelected = field.state.value === opt.value;
+                  return (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => field.handleChange(opt.value)}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-lg border-2 transition-all duration-200 ${isSelected
+                          ? 'bg-primary text-primary-foreground border-primary shadow-md scale-105'
+                          : 'bg-muted/30 border-border hover:border-primary/50 hover:bg-muted/50'
+                        }`}
+                    >
+                      <span className="text-lg">{opt.icon}</span>
+                      <div className="text-left">
+                        <div className={`font-medium text-sm ${isSelected ? '' : 'text-foreground'}`}>{opt.label}</div>
+                        <div className={`text-[10px] ${isSelected ? 'text-primary-foreground/80' : 'text-muted-foreground'}`}>{opt.description}</div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           )}
         </form.Field>
@@ -412,15 +448,15 @@ function StepDatosGenerales({ form }: { form: any }) {
                 <Label htmlFor="anio">Año del Evento</Label>
                 <Input type="number" id="anio" value={field.state.value} onChange={e => field.handleChange(Number(e.target.value))} />
                 {field.state.meta.errors.length > 0 && (
-                   <p className="text-xs text-red-500">
-                     {Array.from(new Set(field.state.meta.errors.map((err: any) => typeof err === 'object' ? err.message : String(err)))).join(", ")}
-                   </p>
+                  <p className="text-xs text-red-500">
+                    {Array.from(new Set(field.state.meta.errors.map((err: any) => typeof err === 'object' ? err.message : String(err)))).join(", ")}
+                  </p>
                 )}
               </div>
             )}
           </form.Field>
-          
-          <form.Field 
+
+          <form.Field
             name="montoTotal"
           >
             {(field: any) => (
@@ -429,16 +465,16 @@ function StepDatosGenerales({ form }: { form: any }) {
                 <div className="relative">
                   <span className="absolute left-3 top-2.5 text-muted-foreground">$</span>
                   <Input
-                    id="montoTotal" 
-                    value={formatCurrency(field.state.value)} 
+                    id="montoTotal"
+                    value={formatCurrency(field.state.value)}
                     onChange={e => field.handleChange(parseCurrency(e))}
                     className={`pl-7 ${field.state.meta.errors.length ? "border-red-500" : ""}`}
                   />
                 </div>
                 {field.state.meta.errors.length > 0 && (
-                   <p className="text-xs text-red-500">
-                     {Array.from(new Set(field.state.meta.errors.map((err: any) => typeof err === 'object' ? err.message : String(err)))).join(", ")}
-                   </p>
+                  <p className="text-xs text-red-500">
+                    {Array.from(new Set(field.state.meta.errors.map((err: any) => typeof err === 'object' ? err.message : String(err)))).join(", ")}
+                  </p>
                 )}
               </div>
             )}
@@ -464,86 +500,86 @@ function StepVigencia({ form }: { form: any }) {
   return (
     <div className="grid gap-6 animate-in fade-in slide-in-from-right-4 duration-300">
       <div className="flex items-center gap-2 pb-2 border-b">
-         <div className="p-2 rounded-full bg-blue-100 text-blue-600">
-            <CalendarDays className="w-5 h-5" />
-         </div>
-         <div>
-            <h3 className="text-lg font-medium">Vigencia y Vencimientos</h3>
-            <p className="text-xs text-muted-foreground">Define cuándo empieza y termina el plan de pagos.</p>
-         </div>
+        <div className="p-2 rounded-full bg-blue-100 text-blue-600">
+          <CalendarDays className="w-5 h-5" />
+        </div>
+        <div>
+          <h3 className="text-lg font-medium">Vigencia y Vencimientos</h3>
+          <p className="text-xs text-muted-foreground">Define cuándo empieza y termina el plan de pagos.</p>
+        </div>
       </div>
 
       <div className="space-y-6">
-         <form.Subscribe selector={(state: any) => [state.values.mesInicioHabilitado, state.values.mesFinHabilitado]}>
-            {([inicio, fin]: any[]) => (
-               <TimelinePreview 
-                  start={inicio} 
-                  end={fin} 
-               />
-            )}
-         </form.Subscribe>
+        <form.Subscribe selector={(state: any) => [state.values.mesInicioHabilitado, state.values.mesFinHabilitado]}>
+          {([inicio, fin]: any[]) => (
+            <TimelinePreview
+              start={inicio}
+              end={fin}
+            />
+          )}
+        </form.Subscribe>
 
-         <div className="grid grid-cols-2 gap-4">
-            <form.Field name="mesInicioHabilitado">
-               {(field: any) => (
-                 <div className="space-y-2">
-                   <Label>Mes Inicio (Primera Cuota)</Label>
-                   <Select value={String(field.state.value)} onValueChange={(v) => field.handleChange(Number(v))}>
-                     <SelectTrigger className="bg-muted/20"><SelectValue /></SelectTrigger>
-                     <SelectContent>
-                       {MESES.map(m => (
-                          <SelectItem key={m.val} value={String(m.val)}>
-                             {m.label} <span className="text-muted-foreground text-xs ml-1">({anioPlan})</span>
-                          </SelectItem>
-                       ))}
-                     </SelectContent>
-                   </Select>
-                 </div>
-               )}
-            </form.Field>
-
-            <form.Field name="mesFinHabilitado">
-              {(field: any) => {
-                 const inicio = form.getFieldValue('mesInicioHabilitado');
-                 return (
-                    <div className="space-y-2">
-                      <Label>Mes Fin (Última Cuota)</Label>
-                      <Select value={String(field.state.value)} onValueChange={(v) => field.handleChange(Number(v))}>
-                        <SelectTrigger className="bg-muted/20"><SelectValue /></SelectTrigger>
-                        <SelectContent className="max-h-[200px]">
-                          {MESES.map(m => {
-                             const isNextYear = inicio && m.val < inicio;
-                             const yearDisplay = isNextYear ? anioPlan + 1 : anioPlan;
-                             const highlight = isNextYear ? "text-orange-600 font-medium" : "text-muted-foreground";
-                             
-                             return (
-                               <SelectItem key={m.val} value={String(m.val)}>
-                                  {m.label} <span className={`${highlight} text-xs ml-1`}>({yearDisplay})</span>
-                               </SelectItem>
-                             );
-                          })}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                 );
-              }}
-            </form.Field>
-         </div>
-
-         <form.Field name="diaVencimiento">
+        <div className="grid grid-cols-2 gap-4">
+          <form.Field name="mesInicioHabilitado">
             {(field: any) => (
               <div className="space-y-2">
-                <Label>Día de Vencimiento Mensual</Label>
+                <Label>Mes Inicio (Primera Cuota)</Label>
                 <Select value={String(field.state.value)} onValueChange={(v) => field.handleChange(Number(v))}>
-                  <SelectTrigger><SelectValue placeholder="Seleccionar día" /></SelectTrigger>
+                  <SelectTrigger className="bg-muted/20"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {[5, 10, 15, 20, 25].map(d => <SelectItem key={d} value={String(d)}>Día {d} de cada mes</SelectItem>)}
+                    {MESES.map(m => (
+                      <SelectItem key={m.val} value={String(m.val)}>
+                        {m.label} <span className="text-muted-foreground text-xs ml-1">({anioPlan})</span>
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
-                <p className="text-xs text-muted-foreground">Fecha límite de pago para cada cuota.</p>
               </div>
             )}
-         </form.Field>
+          </form.Field>
+
+          <form.Field name="mesFinHabilitado">
+            {(field: any) => {
+              const inicio = form.getFieldValue('mesInicioHabilitado');
+              return (
+                <div className="space-y-2">
+                  <Label>Mes Fin (Última Cuota)</Label>
+                  <Select value={String(field.state.value)} onValueChange={(v) => field.handleChange(Number(v))}>
+                    <SelectTrigger className="bg-muted/20"><SelectValue /></SelectTrigger>
+                    <SelectContent className="max-h-[200px]">
+                      {MESES.map(m => {
+                        const isNextYear = inicio && m.val < inicio;
+                        const yearDisplay = isNextYear ? anioPlan + 1 : anioPlan;
+                        const highlight = isNextYear ? "text-orange-600 font-medium" : "text-muted-foreground";
+
+                        return (
+                          <SelectItem key={m.val} value={String(m.val)}>
+                            {m.label} <span className={`${highlight} text-xs ml-1`}>({yearDisplay})</span>
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                </div>
+              );
+            }}
+          </form.Field>
+        </div>
+
+        <form.Field name="diaVencimiento">
+          {(field: any) => (
+            <div className="space-y-2">
+              <Label>Día de Vencimiento Mensual</Label>
+              <Select value={String(field.state.value)} onValueChange={(v) => field.handleChange(Number(v))}>
+                <SelectTrigger><SelectValue placeholder="Seleccionar día" /></SelectTrigger>
+                <SelectContent>
+                  {[5, 10, 15, 20, 25].map(d => <SelectItem key={d} value={String(d)}>Día {d} de cada mes</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">Fecha límite de pago para cada cuota.</p>
+            </div>
+          )}
+        </form.Field>
       </div>
     </div>
   );
@@ -551,7 +587,7 @@ function StepVigencia({ form }: { form: any }) {
 
 function StepPlanB({ form }: { form: any }) {
   const montoTotalA = form.getFieldValue('montoTotal') || 0;
-  
+
   const formatCurrency = (val: number) => {
     if (!val && val !== 0) return "";
     return Number(val).toLocaleString("es-AR");
@@ -575,7 +611,7 @@ function StepPlanB({ form }: { form: any }) {
       </div>
 
       <div className="space-y-4">
-        <form.Field 
+        <form.Field
           name="montoTotalPlanB"
         >
           {(field: any) => (
@@ -587,16 +623,16 @@ function StepPlanB({ form }: { form: any }) {
               <div className="relative">
                 <span className="absolute left-3 top-2.5 text-muted-foreground">$</span>
                 <Input
-                  id="montoTotalPlanB" 
-                  value={formatCurrency(field.state.value)} 
+                  id="montoTotalPlanB"
+                  value={formatCurrency(field.state.value)}
                   onChange={e => field.handleChange(parseCurrency(e))}
                   className={`pl-7 ${field.state.meta.errors.length ? "border-red-500" : ""}`}
                 />
               </div>
               {field.state.meta.errors ? (
-                   <p className="text-xs text-red-500">
-                     {Array.from(new Set(field.state.meta.errors.map((err: any) => typeof err === 'object' ? err.message : String(err)))).join(", ")}
-                   </p>
+                <p className="text-xs text-red-500">
+                  {Array.from(new Set(field.state.meta.errors.map((err: any) => typeof err === 'object' ? err.message : String(err)))).join(", ")}
+                </p>
               ) : null}
               {field.state.value > 0 && montoTotalA > 0 && field.state.value > montoTotalA && (
                 <p className="text-xs text-orange-600 font-medium mt-1">
@@ -611,11 +647,11 @@ function StepPlanB({ form }: { form: any }) {
           {(field: any) => (
             <div className="space-y-2">
               <Label htmlFor="nombrePlanB">Nombre Plan B (opcional)</Label>
-              <Input 
-                id="nombrePlanB" 
+              <Input
+                id="nombrePlanB"
                 placeholder="Se genera automáticamente"
-                value={field.state.value} 
-                onChange={e => field.handleChange(e.target.value)} 
+                value={field.state.value}
+                onChange={e => field.handleChange(e.target.value)}
               />
             </div>
           )}
@@ -637,29 +673,29 @@ function StepReglas({ form }: { form: any }) {
           <p className="text-xs text-muted-foreground">Configura cuándo y cómo se pasa de Plan A a Plan B.</p>
         </div>
       </div>
-      
+
       <form.Subscribe selector={(state: any) => state.values}>
         {(values: any) => (
           <>
-            <TimelinePreview 
-               start={values.mesInicioHabilitado || 3} 
-               end={values.mesFinHabilitado || 1} 
-               controlMonth={values.mesInicioControlAtraso} 
-               toleranceMonths={values.mesesAtrasoParaTransicion}
+            <TimelinePreview
+              start={values.mesInicioHabilitado || 3}
+              end={values.mesFinHabilitado || 1}
+              controlMonth={values.mesInicioControlAtraso}
+              toleranceMonths={values.mesesAtrasoParaTransicion}
             />
 
             <Card>
               <CardContent className="pt-4 space-y-4">
                 <div className="bg-primary/5 p-3 rounded-md text-sm border border-primary/20">
-                   <p className="font-medium text-primary mb-1">Lógica de Transición:</p>
-                   <p className="text-muted-foreground leading-relaxed">
-                     A partir de <strong>{MESES.find(m => m.val === values.mesInicioControlAtraso)?.label}</strong> (inclusive), 
-                     comenzamos a controlar los pagos. <br/>
-                     Para evitar la migración en ese mes, el usuario debería tener abonadas al menos <strong>{values.cuotasMinimasAntesControl} cuotas</strong>.<br/>
-                     <span className="text-xs mt-1 block opacity-80">
-                       * Si posteriormente acumula <strong>{values.mesesAtrasoParaTransicion} meses</strong> de deuda, migrará al Plan B.
-                     </span>
-                   </p>
+                  <p className="font-medium text-primary mb-1">Lógica de Transición:</p>
+                  <p className="text-muted-foreground leading-relaxed">
+                    A partir de <strong>{MESES.find(m => m.val === values.mesInicioControlAtraso)?.label}</strong> (inclusive),
+                    comenzamos a controlar los pagos. <br />
+                    Para evitar la migración en ese mes, el usuario debería tener abonadas al menos <strong>{values.cuotasMinimasAntesControl} cuotas</strong>.<br />
+                    <span className="text-xs mt-1 block opacity-80">
+                      * Si posteriormente acumula <strong>{values.mesesAtrasoParaTransicion} meses</strong> de deuda, migrará al Plan B.
+                    </span>
+                  </p>
                 </div>
 
                 <form.Field name="mesInicioControlAtraso">
@@ -667,7 +703,7 @@ function StepReglas({ form }: { form: any }) {
                     <div className="space-y-2">
                       <Label>Mes de Inicio de Control</Label>
                       <div className="flex gap-2 items-center">
-                         <Select value={String(field.state.value)} onValueChange={(v) => field.handleChange(Number(v))}>
+                        <Select value={String(field.state.value)} onValueChange={(v) => field.handleChange(Number(v))}>
                           <SelectTrigger className="w-full border-l-4 border-l-red-500"><SelectValue /></SelectTrigger>
                           <SelectContent>
                             {MESES.map(m => <SelectItem key={m.val} value={String(m.val)}>{m.label}</SelectItem>)}
@@ -685,17 +721,17 @@ function StepReglas({ form }: { form: any }) {
                       <div className="space-y-2">
                         <Label>Cuotas Mínimas Pagas</Label>
                         <div className="flex items-center gap-2">
-                          <Button variant="outline" size="icon" type="button" 
+                          <Button variant="outline" size="icon" type="button"
                             onClick={() => field.handleChange(Math.max(1, field.state.value - 1))}>-</Button>
                           <span className="font-mono w-8 text-center">{field.state.value}</span>
-                          <Button variant="outline" size="icon" type="button" 
+                          <Button variant="outline" size="icon" type="button"
                             onClick={() => field.handleChange(Math.min(12, field.state.value + 1))}>+</Button>
                         </div>
                         <p className="text-xs text-muted-foreground">Al llegar al mes de control.</p>
                         {field.state.meta.errors ? (
-                            <p className="text-xs text-red-500">
-                              {Array.from(new Set(field.state.meta.errors.map((err: any) => typeof err === 'object' ? err.message : String(err)))).join(", ")}
-                            </p>
+                          <p className="text-xs text-red-500">
+                            {Array.from(new Set(field.state.meta.errors.map((err: any) => typeof err === 'object' ? err.message : String(err)))).join(", ")}
+                          </p>
                         ) : null}
                       </div>
                     )}
@@ -706,17 +742,17 @@ function StepReglas({ form }: { form: any }) {
                       <div className="space-y-2">
                         <Label>Meses Atraso Tolerados</Label>
                         <div className="flex items-center gap-2">
-                          <Button variant="outline" size="icon" type="button" 
+                          <Button variant="outline" size="icon" type="button"
                             onClick={() => field.handleChange(Math.max(1, field.state.value - 1))}>-</Button>
                           <span className="font-mono w-8 text-center">{field.state.value}</span>
-                          <Button variant="outline" size="icon" type="button" 
+                          <Button variant="outline" size="icon" type="button"
                             onClick={() => field.handleChange(Math.min(6, field.state.value + 1))}>+</Button>
                         </div>
                         <p className="text-xs text-muted-foreground text-orange-600 font-medium">Zona de Tolerancia (Naranja)</p>
                         {field.state.meta.errors ? (
-                            <p className="text-xs text-red-500">
-                              {Array.from(new Set(field.state.meta.errors.map((err: any) => typeof err === 'object' ? err.message : String(err)))).join(", ")}
-                            </p>
+                          <p className="text-xs text-red-500">
+                            {Array.from(new Set(field.state.meta.errors.map((err: any) => typeof err === 'object' ? err.message : String(err)))).join(", ")}
+                          </p>
                         ) : null}
                       </div>
                     )}
@@ -801,7 +837,7 @@ function StepRevision({ form }: { form: any }) {
 // Visual Helper
 function TimelinePreview({ start, end, controlMonth, toleranceMonths = 0 }: { start: number; end: number; controlMonth?: number; toleranceMonths?: number }) {
   const available = end >= start ? (end - start + 1) : (12 - start + 1) + end;
-  
+
   const timeline: { val: number; offset: number }[] = [];
   if (end >= start) {
     for (let i = start; i <= end; i++) timeline.push({ val: i, offset: 0 });
@@ -813,12 +849,12 @@ function TimelinePreview({ start, end, controlMonth, toleranceMonths = 0 }: { st
   // Calculate tolerance range
   const toleranceIndices: number[] = [];
   if (controlMonth && toleranceMonths > 0) {
-     const controlIdx = timeline.findIndex(t => t.val === controlMonth);
-     if (controlIdx !== -1) {
-        for(let i=1; i <= toleranceMonths; i++) {
-           if (controlIdx + i < timeline.length) toleranceIndices.push(controlIdx + i);
-        }
-     }
+    const controlIdx = timeline.findIndex(t => t.val === controlMonth);
+    if (controlIdx !== -1) {
+      for (let i = 1; i <= toleranceMonths; i++) {
+        if (controlIdx + i < timeline.length) toleranceIndices.push(controlIdx + i);
+      }
+    }
   }
 
   return (
@@ -826,31 +862,31 @@ function TimelinePreview({ start, end, controlMonth, toleranceMonths = 0 }: { st
       <div className="flex justify-between items-center mb-4">
         <h5 className="text-sm font-medium">Línea de Tiempo del Plan</h5>
         <div className="flex items-center gap-4 text-[10px] uppercase font-bold">
-           <span className="flex items-center gap-1 text-red-600">
-              <div className="w-2 h-2 rounded-full bg-red-500" /> Inicio Control
-           </span>
-           {toleranceMonths > 0 && (
-             <span className="flex items-center gap-1 text-orange-500">
-                <div className="w-2 h-2 rounded-full bg-orange-400" /> Tolerancia ({toleranceMonths}m)
-             </span>
-           )}
+          <span className="flex items-center gap-1 text-red-600">
+            <div className="w-2 h-2 rounded-full bg-red-500" /> Inicio Control
+          </span>
+          {toleranceMonths > 0 && (
+            <span className="flex items-center gap-1 text-orange-500">
+              <div className="w-2 h-2 rounded-full bg-orange-400" /> Tolerancia ({toleranceMonths}m)
+            </span>
+          )}
         </div>
       </div>
-      
+
       <div className="flex items-center gap-1 mb-2 overflow-visible pb-4 pt-4 px-2 scrollbar-thin">
         {timeline.map((item, idx) => {
           const m = MESES.find(m => m.val === item.val);
           const isNextYear = item.offset > 0;
-          const isControl = controlMonth === item.val; 
+          const isControl = controlMonth === item.val;
           const isTolerance = toleranceIndices.includes(idx);
-          
+
           return (
             <div key={`${item.val}-${item.offset}`} className="flex flex-col items-center gap-2 min-w-[3rem]">
-              <div 
+              <div
                 className={`relative w-10 h-10 rounded-md border flex items-center justify-center font-bold text-sm shadow-sm transition-all duration-300
-                  ${isControl ? 'bg-red-50 text-red-600 border-red-500 ring-4 ring-red-100 z-10 scale-125 shadow-lg' : 
+                  ${isControl ? 'bg-red-50 text-red-600 border-red-500 ring-4 ring-red-100 z-10 scale-125 shadow-lg' :
                     isTolerance ? 'bg-orange-50 text-orange-600 border-orange-400 ring-2 ring-orange-100 scale-110' :
-                    isNextYear ? 'text-white border-orange-700' : 'bg-primary text-primary-foreground border-primary'}`}
+                      isNextYear ? 'text-white border-orange-700' : 'bg-primary text-primary-foreground border-primary'}`}
                 style={isNextYear && !isTolerance && !isControl ? { backgroundColor: "#FF6B35" } : {}}
               >
                 {idx + 1}
@@ -866,7 +902,7 @@ function TimelinePreview({ start, end, controlMonth, toleranceMonths = 0 }: { st
           );
         })}
       </div>
-      
+
       <p className="text-xs text-muted-foreground text-right pt-2 border-t mt-2">
         Duración: <strong>{available} meses</strong> (plan estricto).
       </p>
