@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { useAuth } from "react-oidc-context";
+import { useAuth } from "../hooks/useAuth";
 import { CheckCircle2, XCircle, Clock, ArrowRight, RefreshCw, CreditCard, AlertTriangle } from "lucide-react";
 
 /**
@@ -21,11 +21,11 @@ type PaymentStatus = "success" | "failure" | "pending" | "unknown";
 function PagoResultadoPage() {
   const { status } = useSearch({ from: "/pago-resultado" });
   const navigate = useNavigate();
-  const auth = useAuth();
+  const { isAuthenticated, login } = useAuth();
   const [countdown, setCountdown] = useState(8);
 
-  const paymentStatus = (["success", "failure", "pending"].includes(status) 
-    ? status 
+  const paymentStatus = (["success", "failure", "pending"].includes(status)
+    ? status
     : "unknown") as PaymentStatus;
 
   // Auto-redirect countdown solo para success
@@ -47,10 +47,10 @@ function PagoResultadoPage() {
   }, [paymentStatus]);
 
   const handleGoToPayments = () => {
-    if (auth.isAuthenticated) {
+    if (isAuthenticated) {
       navigate({ to: "/pagos", search: { mes: undefined, devMode: false } });
     } else {
-      auth.signinRedirect({ redirect_uri: `${window.location.origin}/callback` });
+      login();
     }
   };
 
@@ -163,7 +163,7 @@ function PagoResultadoPage() {
               <RefreshCw className="w-5 h-5" />
               Intentar nuevamente
             </button>
-            
+
             <button
               onClick={handleGoToPayments}
               className="w-full py-3 px-6 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors font-medium flex items-center justify-center gap-2"

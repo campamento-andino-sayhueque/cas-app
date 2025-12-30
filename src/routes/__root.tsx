@@ -1,22 +1,23 @@
 import { createRootRoute, Outlet } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { type useAuth } from "../hooks/useAuth";
 import { Toaster } from "../components/ui/sonner";
 import { useEffect } from "react";
 import { toast } from "sonner";
 import { requestForToken, onMessageListener } from "../lib/firebase";
+import { useAuth } from "../hooks/useAuth";
 
-export interface RouterContext {
-  auth: ReturnType<typeof useAuth>;
-}
-
-export const Route = createRootRoute<RouterContext>({
+export const Route = createRootRoute({
   component: RootRouteComponent,
 });
 
 function RootRouteComponent() {
+  const { isAuthenticated } = useAuth();
+
   useEffect(() => {
+    // Solo mostrar si el usuario está autenticado
+    if (!isAuthenticated) return;
+
     // Only set up the listener, don't auto-request token which might be blocked
     const unsubscribe = onMessageListener((payload: any) => {
       console.log("Foreground message received:", payload);
@@ -31,7 +32,8 @@ function RootRouteComponent() {
       requestForToken();
     } else if (Notification.permission === "default") {
       toast("Activar notificaciones?", {
-        description: "Recibi novedades del campamento",
+        id: "activate-notifications",
+        description: "Recibí novedades del campamento",
         action: {
           label: "Activar",
           onClick: () => requestForToken(),
@@ -43,7 +45,7 @@ function RootRouteComponent() {
     return () => {
       if (unsubscribe) unsubscribe();
     };
-  }, []);
+  }, [isAuthenticated]);
 
   return (
     <>

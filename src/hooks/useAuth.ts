@@ -1,43 +1,68 @@
 import { useCallback } from "react";
-import { useAuth as useOidcAuth } from "react-oidc-context";
+import { useOidc } from "../oidc";
 
 export function useAuth() {
-  const auth = useOidcAuth();
+  const oidc = useOidc();
 
   const signOut = useCallback(async () => {
-    await auth.removeUser();
-    await auth.signoutRedirect();
-  }, [auth]);
+    if (oidc.isUserLoggedIn) {
+      await oidc.logout({ redirectTo: "home" });
+    }
+  }, [oidc]);
 
-  const roles = (auth.user?.profile?.roles as string[]) || [];
-  const groups = (auth.user?.profile?.groups as string[]) || [];
+  const login = useCallback(async () => {
+    if (!oidc.isUserLoggedIn && oidc.login) {
+      await oidc.login({});
+    }
+  }, [oidc]);
 
-  const hasRole = useCallback((role: string) => 
-    roles.some(r => r.toLowerCase() === role.toLowerCase()), [roles]);
-    
-  const hasGroup = useCallback((group: string) => 
-    groups.some(g => g.toLowerCase() === group.toLowerCase()), [groups]);
+  if (!oidc.isUserLoggedIn) {
+    return {
+      user: null,
+      signOut,
+      login,
+      isAuthenticated: false,
+      isLoading: false,
+      error: null,
+      hasRole: () => false,
+      hasGroup: () => false,
+    };
+  }
 
-  const user = auth.user
-    ? {
-        displayName: auth.user.profile.name || auth.user.profile.preferred_username || null,
-        email: auth.user.profile.email || null,
-        uid: auth.user.profile.sub || null,
-        photoURL: auth.user.profile.picture || null,
-        access_token: auth.user.access_token || null,
-        roles,
-        groups,
-      }
-    : null;
+  const { decodedIdToken } = oidc;
+  // Roles are at top level in the token (not under realm_access)
+  const roles = decodedIdToken.roles ?? [];
+  const groups = decodedIdToken.groups ?? [];
+
+  const hasRole = useCallback(
+    (role: string) =>
+      roles.some((r) => r.toLowerCase() === role.toLowerCase()),
+    [roles]
+  );
+
+  const hasGroup = useCallback(
+    (group: string) =>
+      groups.some((g) => g.toLowerCase() === group.toLowerCase()),
+    [groups]
+  );
+
+  const user = {
+    displayName: decodedIdToken.name || decodedIdToken.preferred_username || null,
+    email: decodedIdToken.email || null,
+    uid: decodedIdToken.sub || null,
+    photoURL: decodedIdToken.picture || null,
+    roles,
+    groups,
+  };
 
   return {
     user,
     signOut,
-    isAuthenticated: auth.isAuthenticated,
-    isLoading: auth.isLoading,
-    error: auth.error,
+    login,
+    isAuthenticated: true,
+    isLoading: false,
+    error: null,
     hasRole,
     hasGroup,
-    originalAuth: auth 
   };
 }

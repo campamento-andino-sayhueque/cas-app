@@ -1,21 +1,20 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { User } from 'oidc-client-ts';
-import { type RouterContext } from './__root';
+import { useAuth } from '../hooks/useAuth';
 
 export const Route = createFileRoute('/_auth/grupos')({
-  beforeLoad: ({ context }) => {
-     const ctx = context as RouterContext;
-     const user = ctx.auth.user as User | null;
-     const groups = (user?.profile as any)?.groups || [];
-     if (!groups.includes('CONSEJO')) {
-         console.warn('User not in CONSEJO group', groups);
-         // throw redirect({ to: '/dashboard' })
-    }
+  beforeLoad: () => {
+    // Authorization check is done in the component
   },
   component: RouteComponent,
 })
 
 function RouteComponent() {
+  const auth = useAuth();
+  const groups = auth.user?.groups || [];
+
+  if (!groups.some(g => g.toLowerCase().includes('consejo'))) {
+    console.warn('User not in CONSEJO group', groups);
+  }
+
   return <div>Hello "/_auth/grupos"! (Restricted to CONSEJO)</div>
 }
-

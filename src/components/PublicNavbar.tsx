@@ -1,13 +1,10 @@
 import { Link } from "@tanstack/react-router";
-import { useAuth } from "react-oidc-context";
+import { useAuth } from "../hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Code2 } from "lucide-react"; // A nice icon for a logo
 
 export function PublicNavbar() {
-  const auth = useAuth();
-
-  const handleLogin = () => auth.signinRedirect();
-  const handleLogout = () => auth.signoutRedirect();
+  const { isAuthenticated, login, signOut } = useAuth();
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -27,17 +24,17 @@ export function PublicNavbar() {
 
         {/* Auth Buttons - Right side */}
         <div className="flex items-center space-x-4">
-          {auth.isAuthenticated ? (
+          {isAuthenticated ? (
             <>
               <Button asChild variant="ghost">
                 <Link to="/dashboard">Dashboard</Link>
               </Button>
-              <Button onClick={handleLogout} variant="outline">
+              <Button onClick={signOut} variant="outline">
                 Logout
               </Button>
             </>
           ) : (
-            <Button onClick={handleLogin}>Login</Button>
+            <Button onClick={login}>Login</Button>
           )}
         </div>
       </div>

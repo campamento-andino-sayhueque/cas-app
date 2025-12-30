@@ -1,11 +1,10 @@
 import { Link } from "@tanstack/react-router";
-import { useAuth } from "react-oidc-context";
+import { useAuth } from "../hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Code2 } from "lucide-react";
 
 function DashboardNavbar() {
-  const auth = useAuth();
-  const handleLogout = () => auth.signoutRedirect();
+  const { user, signOut } = useAuth();
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -27,9 +26,9 @@ function DashboardNavbar() {
         {/* User Info and Logout - Right side */}
         <div className="flex items-center space-x-4 ml-140">
           <span className="text-sm text-muted-foreground">
-            Welcome, {auth.user?.profile.name}
+            Welcome, {user?.displayName}
           </span>
-          <Button onClick={handleLogout} variant="outline" size="sm">
+          <Button onClick={signOut} variant="outline" size="sm">
             Logout
           </Button>
         </div>

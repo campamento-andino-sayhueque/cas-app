@@ -6,23 +6,14 @@ import { TablaPlanes } from '../components/pagos/TablaPlanes';
 import { WizardPlanPago } from '../components/pagos/WizardPlanPago';
 import { EditarPlanDialog } from '../components/pagos/EditarPlanDialog';
 import {
-  useAdminPlanes, 
-  useCrearPlan, 
+  useAdminPlanes,
+  useCrearPlan,
   useToggleEstadoPlan
 } from '../hooks/usePagos';
 import { type PlanPago, type PlanPagoRequest } from '../api/schemas/pagos';
 import { toast } from 'sonner';
-import { type RouterContext } from './__root';
 
 export const Route = createFileRoute('/_auth/definicion-planes')({
-  beforeLoad: ({ context }) => {
-    const { auth } = context as RouterContext;
-    const user = auth.user;
-    const groups = user?.groups || [];
-    if (!groups.includes('CONSEJO')) {
-         console.warn('User not in CONSEJO group', groups);
-    }
-  },
   component: RouteComponent,
 });
 
@@ -30,10 +21,10 @@ function RouteComponent() {
   const { planes, cargando: cargandoPlanes, error } = useAdminPlanes();
   const { crearPlan, cargando: creando } = useCrearPlan();
   const { toggleEstado } = useToggleEstadoPlan();
-  
+
   // State for Wizard (Creation)
   const [wizardAbierto, setWizardAbierto] = useState(false);
-  
+
   // State for Edit Dialog (Modification)
   const [planEditar, setPlanEditar] = useState<PlanPago | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -57,12 +48,12 @@ function RouteComponent() {
       toast.error("Error al cambiar estado del plan");
     }
   };
-  
+
   const handleGuardarNuevo = async (datos: PlanPagoRequest) => {
     try {
-        await crearPlan(datos);
-        toast.success("Plan creado exitosamente");
-        setWizardAbierto(false);
+      await crearPlan(datos);
+      toast.success("Plan creado exitosamente");
+      setWizardAbierto(false);
     } catch (err) {
       console.error(err);
       toast.error("Error al guardar plan");
@@ -99,16 +90,16 @@ function RouteComponent() {
         <div className="relative">
           {cargandoPlanes && (
             <div className="absolute inset-0 bg-white/60 dark:bg-slate-950/60 z-10 flex items-center justify-center backdrop-blur-[1px]">
-               <div className="bg-white dark:bg-slate-900 px-4 py-2 rounded-full shadow-lg border flex items-center gap-2">
-                 <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                 <span className="text-sm font-medium">Actualizando...</span>
-               </div>
+              <div className="bg-white dark:bg-slate-900 px-4 py-2 rounded-full shadow-lg border flex items-center gap-2">
+                <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                <span className="text-sm font-medium">Actualizando...</span>
+              </div>
             </div>
           )}
-          <TablaPlanes 
-              planes={planes} 
-              onEditar={handleEditarPlan} 
-              onToggleEstado={handleToggleEstado}
+          <TablaPlanes
+            planes={planes}
+            onEditar={handleEditarPlan}
+            onToggleEstado={handleToggleEstado}
           />
         </div>
       )}
@@ -124,11 +115,11 @@ function RouteComponent() {
       )}
 
       {/* Edit Dialog */}
-      <EditarPlanDialog 
+      <EditarPlanDialog
         open={editDialogOpen}
         onClose={() => {
-            setEditDialogOpen(false);
-            setPlanEditar(null);
+          setEditDialogOpen(false);
+          setPlanEditar(null);
         }}
         plan={planEditar}
       />

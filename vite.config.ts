@@ -3,6 +3,7 @@ import { VitePWA } from 'vite-plugin-pwa'
 import { devtools } from '@tanstack/devtools-vite'
 import viteReact from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
+import { oidcSpa } from 'oidc-spa/vite-plugin'
 
 import { tanstackRouter } from '@tanstack/router-plugin/vite'
 import { fileURLToPath, URL } from 'node:url'
@@ -19,6 +20,9 @@ export default defineConfig(({ mode }) => {
       tanstackRouter({
         target: 'react',
         autoCodeSplitting: true,
+      }),
+      oidcSpa({
+        enableTokenExfiltrationDefense: false
       }),
       viteReact(),
       tailwindcss(),
