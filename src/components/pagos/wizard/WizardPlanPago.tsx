@@ -24,6 +24,7 @@ import {
     StepPlanADatos,
     StepPlanAVigencia,
     StepPlanAMonto,
+    StepPlanAInscripcion,
     StepPlanB,
     StepMigracion,
     StepDevolucion,
@@ -42,6 +43,7 @@ const PLAN_A_SUBSTEP_LABELS = {
     datos: { title: 'Datos', icon: LayoutList },
     vigencia: { title: 'Vigencia', icon: CalendarDays },
     monto: { title: 'Monto', icon: DollarSign },
+    inscripcion: { title: 'Inscripción', icon: CalendarDays },
 };
 
 interface WizardPlanPagoProps {
@@ -62,6 +64,8 @@ export function WizardPlanPago(props: WizardPlanPagoProps) {
 function WizardPlanPagoContent({ abierto, onCerrar, onGuardar, cargando }: WizardPlanPagoProps) {
     const stepper = GlobalStepper.useStepper();
     const [planASubStep, setPlanASubStep] = useState<number>(0);
+    const [subStepErrors, setSubStepErrors] = useState<Record<number, boolean>>({});
+    const [globalStepErrors, setGlobalStepErrors] = useState<Record<string, boolean>>({});
 
     const form = useForm({
         defaultValues: {
@@ -87,6 +91,7 @@ function WizardPlanPagoContent({ abierto, onCerrar, onGuardar, cargando }: Wizar
             mesesAtrasoParaTransicion: 2,
             mesLimiteDevolucion100: 9,
             mesLimiteDevolucion50: 10,
+            mesLimiteInscripcion: 10, // Por defecto ACAMPANTE
         } as PlanPagoRequest,
         onSubmit: async ({ value }) => {
             onGuardar(prepareData(value));
@@ -101,36 +106,86 @@ function WizardPlanPagoContent({ abierto, onCerrar, onGuardar, cargando }: Wizar
         finalData.minCuotas = totalMonths;
         finalData.maxCuotas = totalMonths;
 
-        // Generar código único basado en: nombre + audiencia + año
-        const nombreNormalizado = finalData.nombreParaMostrar
-            .toUpperCase()
-            .replace(/\s+/g, '-')
-            .replace(/[^A-Z0-9-]/g, '')
-            .substring(0, 20);
-
         // Incluir audiencia en el código para evitar colisiones
-        const audienciaPrefix = finalData.audiencia ? finalData.audiencia.substring(0, 3) : 'GEN';
+        const audienciaPrefix = finalData.audiencia ? finalData.audiencia.substring(0, 3).toUpperCase() : 'GEN';
 
-        if (!finalData.codigo) finalData.codigo = `${nombreNormalizado}-${audienciaPrefix}-A-${finalData.anio}`;
-        if (!finalData.codigoPlanB) finalData.codigoPlanB = `${nombreNormalizado}-${audienciaPrefix}-B-${finalData.anio}`;
-        if (!finalData.nombrePlanB) finalData.nombrePlanB = `${finalData.nombreParaMostrar} (Plan B)`;
+        if (!finalData.codigo) finalData.codigo = `PLAN-A-${audienciaPrefix}-${finalData.anio}`;
+        if (!finalData.codigoPlanB) finalData.codigoPlanB = `PLAN-B-${audienciaPrefix}-${finalData.anio}`;
+        if (!finalData.nombrePlanB) finalData.nombrePlanB = "Plan B";
         return finalData;
     };
 
     const handleNext = async () => {
         const currentStepId = stepper.current.id;
 
-        // Validate current fields
-        const isValid = await form.validateAllFields('change');
-        if (!isValid) return;
-
         if (currentStepId === 'planA') {
+            // Validar campos específicos según el sub-step actual
+            let hasErrors = false;
+            
+            if (planASubStep === 0) {
+                // Sub-step Datos: validar nombre y año
+                await form.validateField('nombreParaMostrar', 'change');
+                await form.validateField('anio', 'change');
+                const nombreErrors = form.getFieldMeta('nombreParaMostrar')?.errors || [];
+                const anioErrors = form.getFieldMeta('anio')?.errors || [];
+                hasErrors = nombreErrors.length > 0 || anioErrors.length > 0;
+            }
+            
+            if (planASubStep === 2) {
+                // Sub-step Monto: validar monto total
+                await form.validateField('montoTotal', 'change');
+                const montoErrors = form.getFieldMeta('montoTotal')?.errors || [];
+                hasErrors = montoErrors.length > 0;
+            }
+
+            // Actualizar estado de errores del sub-step
+            setSubStepErrors(prev => ({ ...prev, [planASubStep]: hasErrors }));
+            
+            if (hasErrors) return;
+
+            // Limpiar error del sub-step actual al avanzar
+            setSubStepErrors(prev => ({ ...prev, [planASubStep]: false }));
+
+            // Avanzar al siguiente sub-step
             if (planASubStep < PLAN_A_SUBSTEPS.length - 1) {
                 setPlanASubStep(planASubStep + 1);
                 return;
             }
             setPlanASubStep(0);
         }
+
+        // Validar campos del step actual antes de avanzar al siguiente main step
+        let stepFieldsToValidate: string[] = [];
+        
+        switch (currentStepId) {
+            case 'planA':
+                stepFieldsToValidate = ['nombreParaMostrar', 'anio', 'montoTotal', 'mesLimiteInscripcion'];
+                break;
+            case 'planB':
+                stepFieldsToValidate = ['montoTotalPlanB'];
+                break;
+            case 'migracion':
+                stepFieldsToValidate = ['mesInicioControlAtraso', 'cuotasMinimasAntesControl'];
+                break;
+        }
+
+        for (const field of stepFieldsToValidate) {
+            await form.validateField(field as any, 'change');
+        }
+
+        const stepHasErrors = stepFieldsToValidate.some(f => {
+            const errors = form.getFieldMeta(f as any)?.errors || [];
+            return errors.length > 0;
+        });
+
+        setGlobalStepErrors(prev => ({ ...prev, [currentStepId]: stepHasErrors }));
+
+        if (stepHasErrors) {
+            return; // No avanzar si hay errores
+        }
+
+        // Limpiar error del step al avanzar exitosamente
+        setGlobalStepErrors(prev => ({ ...prev, [currentStepId]: false }));
 
         stepper.next();
     };
@@ -188,7 +243,9 @@ function WizardPlanPagoContent({ abierto, onCerrar, onGuardar, cargando }: Wizar
                                             type="button"
                                             variant={isCompleted || isCurrent ? 'default' : 'secondary'}
                                             size="sm"
-                                            className={`flex size-9 items-center justify-center rounded-full p-0 ${isCurrent ? 'ring-2 ring-offset-2 ring-primary' : ''}`}
+                                            className={`flex size-9 items-center justify-center rounded-full p-0 
+                                                ${isCurrent ? 'ring-2 ring-offset-2 ring-primary' : ''}
+                                                ${globalStepErrors[step.id] ? 'bg-red-500 hover:bg-red-600 text-white ring-2 ring-red-300' : ''}`}
                                             onClick={() => index < currentIndex && stepper.goTo(step.id as any)}
                                         >
                                             {isCompleted ? <CheckCircle2 className="w-4 h-4" /> : <Icon className="w-4 h-4" />}
@@ -213,31 +270,38 @@ function WizardPlanPagoContent({ abierto, onCerrar, onGuardar, cargando }: Wizar
                             const SubIcon = PLAN_A_SUBSTEP_LABELS[sub].icon;
                             const isActive = idx === planASubStep;
                             const isComplete = idx < planASubStep;
+                            const hasError = subStepErrors[idx];
                             return (
                                 <button
                                     key={sub}
                                     type="button"
                                     onClick={() => idx < planASubStep && setPlanASubStep(idx)}
                                     className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all
-                    ${isActive ? 'bg-primary text-primary-foreground shadow-md' :
+                    ${hasError ? 'bg-red-500 text-white ring-2 ring-red-300 animate-pulse' :
+                                            isActive ? 'bg-primary text-primary-foreground shadow-md' :
                                             isComplete ? 'bg-primary/20 text-primary cursor-pointer hover:bg-primary/30' :
                                                 'bg-muted text-muted-foreground'}`}
                                 >
                                     <SubIcon className="w-3.5 h-3.5" />
                                     {PLAN_A_SUBSTEP_LABELS[sub].title}
-                                    {isComplete && <CheckCircle2 className="w-3 h-3 ml-1" />}
+                                    {isComplete && !hasError && <CheckCircle2 className="w-3 h-3 ml-1" />}
                                 </button>
                             );
                         })}
                     </div>
                 )}
 
-                <form onSubmit={(e) => { e.preventDefault(); form.handleSubmit(); }} className="space-y-6 py-4 px-1">
+                <form 
+                    onSubmit={(e) => e.preventDefault()} 
+                    onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
+                    className="space-y-6 py-4 px-1"
+                >
                     {stepper.switch({
                         planA: () => {
                             if (planASubStep === 0) return <StepPlanADatos form={form} />;
                             if (planASubStep === 1) return <StepPlanAVigencia form={form} />;
-                            return <StepPlanAMonto form={form} />;
+                            if (planASubStep === 2) return <StepPlanAMonto form={form} />;
+                            return <StepPlanAInscripcion form={form} />;
                         },
                         planB: () => <StepPlanB form={form} />,
                         migracion: () => <StepMigracion form={form} />,

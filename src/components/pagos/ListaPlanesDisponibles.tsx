@@ -1,37 +1,18 @@
 /**
  * Lista de Planes Disponibles para Inscripción
+ * Diseño minimalista - toda la info detallada está en el Wizard
  */
 
-import { AlertTriangle, ShieldCheck, Zap } from "lucide-react";
+import { Crown, Star } from "lucide-react";
 import { type PlanPago, AudienciaPlan } from "../../api/schemas/pagos";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../ui/card";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "../ui/card";
 import { getAudienciaInfo } from "./utils/audienciaUtils";
 
 interface ListaPlanesDisponiblesProps {
   planes: PlanPago[];
   onInscribirse: (plan: PlanPago) => void;
-}
-
-const MESES_NUMERO: Record<number, string> = {
-  1: 'Enero', 2: 'Febrero', 3: 'Marzo', 4: 'Abril',
-  5: 'Mayo', 6: 'Junio', 7: 'Julio', 8: 'Agosto',
-  9: 'Septiembre', 10: 'Octubre', 11: 'Noviembre', 12: 'Diciembre',
-};
-
-// Helper para convertir mes a nombre
-function getMesNombre(mes: string | number | undefined): string {
-  if (mes === undefined || mes === null) return 'N/A';
-  if (typeof mes === 'number') return MESES_NUMERO[mes] || `Mes ${mes}`;
-  // Si es string tipo "APRIL", extraer
-  const mesUpper = mes.toUpperCase();
-  const mesesMap: Record<string, string> = {
-    'JANUARY': 'Enero', 'FEBRUARY': 'Febrero', 'MARCH': 'Marzo', 'APRIL': 'Abril',
-    'MAY': 'Mayo', 'JUNE': 'Junio', 'JULY': 'Julio', 'AUGUST': 'Agosto',
-    'SEPTEMBER': 'Septiembre', 'OCTOBER': 'Octubre', 'NOVEMBER': 'Noviembre', 'DECEMBER': 'Diciembre',
-  };
-  return mesesMap[mesUpper] || mes;
 }
 
 export function ListaPlanesDisponibles({ planes, onInscribirse }: ListaPlanesDisponiblesProps) {
@@ -45,114 +26,73 @@ export function ListaPlanesDisponibles({ planes, onInscribirse }: ListaPlanesDis
   }
 
   return (
-    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {planes.map((plan) => {
         const esPlanA = plan.estrategia === 'PLAN_A';
-        const planB = plan.planDestino as PlanPago | undefined;
         const audienciaInfo = getAudienciaInfo(plan.audiencia as AudienciaPlan | undefined);
         const AudienciaIcon = audienciaInfo.icon;
 
         return (
-          <Card key={plan.codigo} className="flex flex-col relative overflow-hidden group hover:border-primary/50 transition-all border-2">
-            {/* Strategy & Audience Indicators */}
-            <div className="absolute top-0 right-0 p-2 flex flex-col gap-1 items-end">
+          <Card 
+            key={plan.codigo} 
+            className={`relative overflow-hidden transition-all hover:shadow-lg cursor-pointer group
+              ${esPlanA 
+                ? 'border-amber-400/50 hover:border-amber-500 bg-gradient-to-br from-amber-50/50 to-transparent dark:from-amber-950/20' 
+                : 'border-slate-300/50 hover:border-slate-400 bg-gradient-to-br from-slate-100/50 to-transparent dark:from-slate-800/20'
+              }
+            `}
+            onClick={() => onInscribirse(plan)}
+          >
+            {/* Top Badges */}
+            <div className="absolute top-2 right-2 flex flex-col gap-1 items-end">
               <Badge
                 variant="secondary"
                 className={esPlanA
-                  ? "bg-primary/10 text-primary border-primary/20"
-                  : "bg-orange-100 text-orange-700 border-orange-200"
+                  ? "bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-900/50 dark:text-amber-200"
+                  : "bg-slate-200 text-slate-700 border-slate-300 dark:bg-slate-700 dark:text-slate-200"
                 }
               >
                 {esPlanA ? 'PLAN A' : 'PLAN B'}
               </Badge>
-              {/* Chip de Audiencia */}
               <Badge
                 variant="outline"
-                className={`${audienciaInfo.bgClass} ${audienciaInfo.textClass} ${audienciaInfo.borderClass} flex items-center gap-1`}
+                className={`${audienciaInfo.bgClass} ${audienciaInfo.textClass} ${audienciaInfo.borderClass} flex items-center gap-1 text-[10px]`}
               >
                 <AudienciaIcon className="w-3 h-3" />
                 {audienciaInfo.label}
               </Badge>
             </div>
 
-            <CardHeader>
-              <CardTitle className="text-xl flex items-center gap-2">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg flex items-center gap-2">
                 {esPlanA
-                  ? <ShieldCheck className="w-5 h-5 text-primary" />
-                  : <AlertTriangle className="w-5 h-5 text-orange-500" />
+                  ? <Crown className="w-5 h-5 text-amber-500" />
+                  : <Star className="w-5 h-5 text-slate-400" />
                 }
                 {plan.nombre}
               </CardTitle>
-              <CardDescription>Plan anual {plan.anio}</CardDescription>
+              <p className="text-xs text-muted-foreground">Ciclo {plan.anio}</p>
             </CardHeader>
 
-            <CardContent className="flex-1 space-y-4">
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground text-sm">Monto Total:</span>
-                  <span className="text-xl font-bold text-primary">${Number(plan.montoTotal).toLocaleString('es-AR')}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground text-sm">Cuotas:</span>
-                  <Badge variant="secondary" className="font-semibold">
-                    {plan.minCuotas === plan.maxCuotas
-                      ? `${plan.maxCuotas} cuotas`
-                      : `${plan.minCuotas} a ${plan.maxCuotas} cuotas`
-                    }
-                  </Badge>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground text-sm">Vigencia:</span>
-                  <span className="text-sm font-medium">
-                    {getMesNombre(plan.mesInicio)} - {getMesNombre(plan.mesFin)}
-                  </span>
-                </div>
-              </div>
-
-              {/* Reglas solo para Plan A */}
-              {esPlanA && plan.mesInicioControlAtraso && (
-                <div className="bg-muted/30 rounded-lg p-3 space-y-2">
-                  <p className="text-xs font-bold uppercase text-muted-foreground flex items-center gap-1">
-                    <Zap className="w-3 h-3 text-orange-500" />
-                    Condiciones para mantener este plan
-                  </p>
-                  <div className="text-[11px] space-y-1 text-muted-foreground leading-tight">
-                    <p className="flex items-start gap-1">
-                      <span className="text-primary font-bold">•</span>
-                      <span>Tener al menos <strong>{plan.cuotasMinimasAntesControl} cuotas pagadas</strong> para <strong>{MESES_NUMERO[plan.mesInicioControlAtraso]}</strong>.</span>
-                    </p>
-                    <p className="flex items-start gap-1">
-                      <span className="text-primary font-bold">•</span>
-                      <span>A partir de {MESES_NUMERO[plan.mesInicioControlAtraso]}, no acumular más de <strong>{plan.mesesAtrasoParaTransicion} meses</strong> de atraso.</span>
-                    </p>
-                    {planB && (
-                      <div className="text-orange-700 dark:text-orange-400 font-medium pt-2 mt-2 border-t border-muted-foreground/20 space-y-1">
-                        <p className="flex items-start gap-1">
-                          <AlertTriangle className="w-3 h-3 mt-0.5 flex-shrink-0" />
-                          <span>Si no cumplís las condiciones, pasarás automáticamente al <strong>{planB.nombre}</strong>:</span>
-                        </p>
-                        <p className="ml-4 text-[10px]">
-                          ${Number(planB.montoTotal).toLocaleString('es-AR')} en {planB.minCuotas} a {planB.maxCuotas} cuotas ({getMesNombre(planB.mesInicio)} - {getMesNombre(planB.mesFin)})
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Info para Plan B */}
-              {!esPlanA && (
-                <div className="bg-orange-50 dark:bg-orange-950/30 rounded-lg p-3 border border-orange-200 dark:border-orange-800">
-                  <p className="text-xs font-medium text-orange-700 dark:text-orange-300">
-                    Este plan está disponible para inscripciones tardías (a partir de Julio) o para quienes no cumplieron las condiciones del Plan A.
-                  </p>
-                </div>
-              )}
+            <CardContent className="pb-2">
+              <p className={`text-3xl font-bold ${esPlanA ? 'text-amber-600 dark:text-amber-400' : 'text-slate-600 dark:text-slate-300'}`}>
+                ${Number(plan.montoTotal).toLocaleString('es-AR')}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {plan.maxCuotas} cuotas
+              </p>
             </CardContent>
 
-            <CardFooter>
-              <Button className="w-full font-bold shadow-lg" onClick={() => onInscribirse(plan)}>
-                Inscribirme ahora
+            <CardFooter className="pt-2">
+              <Button 
+                className={`w-full transition-colors ${esPlanA 
+                  ? 'group-hover:bg-amber-500 group-hover:text-white group-hover:border-amber-500' 
+                  : 'group-hover:bg-slate-500 group-hover:text-white group-hover:border-slate-500'
+                }`}
+                variant="outline"
+                onClick={(e) => { e.stopPropagation(); onInscribirse(plan); }}
+              >
+                Ver detalles
               </Button>
             </CardFooter>
           </Card>
@@ -161,4 +101,3 @@ export function ListaPlanesDisponibles({ planes, onInscribirse }: ListaPlanesDis
     </div>
   );
 }
-

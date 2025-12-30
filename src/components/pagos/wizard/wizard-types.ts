@@ -2,7 +2,7 @@
  * Tipos y constantes del Wizard de Planes de Pago.
  */
 
-export const PLAN_A_SUBSTEPS = ['datos', 'vigencia', 'monto'] as const;
+export const PLAN_A_SUBSTEPS = ['datos', 'vigencia', 'monto', 'inscripcion'] as const;
 export type PlanASubStep = typeof PLAN_A_SUBSTEPS[number];
 
 export const MESES = [

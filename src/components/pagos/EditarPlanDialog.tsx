@@ -158,7 +158,7 @@ export function EditarPlanDialog({ plan, open, onClose }: EditarPlanDialogProps)
               {[
                 { value: AudienciaPlan.ACAMPANTE, label: 'Acampante', icon: '🏕️', description: 'Hijos/Participantes' },
                 { value: AudienciaPlan.DIRIGENTE, label: 'Dirigente', icon: '🎯', description: 'Líderes' },
-                { value: AudienciaPlan.STAFF_BASE, label: 'Staff Base', icon: '👨‍🍳', description: 'Cocina/Voluntarios' },
+                { value: AudienciaPlan.BASE, label: 'Base', icon: '👨‍🍳', description: 'Cocina/Voluntarios' },
               ].map((opt) => {
                 const currentValue = watch('audiencia') || AudienciaPlan.ACAMPANTE;
                 const isSelected = currentValue === opt.value;

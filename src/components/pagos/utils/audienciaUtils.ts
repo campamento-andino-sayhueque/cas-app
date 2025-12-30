@@ -26,9 +26,9 @@ export function getAudienciaInfo(audiencia: AudienciaPlan | undefined): Audienci
                 textClass: 'text-indigo-700 dark:text-indigo-300',
                 borderClass: 'border-indigo-200 dark:border-indigo-800'
             };
-        case AudienciaPlan.STAFF_BASE:
+        case AudienciaPlan.BASE:
             return {
-                label: 'Staff Base',
+                label: 'Base',
                 icon: ChefHat,
                 bgClass: 'bg-amber-100 dark:bg-amber-950/50',
                 textClass: 'text-amber-700 dark:text-amber-300',

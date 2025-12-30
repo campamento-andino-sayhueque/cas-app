@@ -29,7 +29,7 @@ export function TimelinePreview({ start, end, controlMonth, toleranceMonths = 2 
 
     return (
         <div className="flex gap-1 overflow-x-auto py-2 px-1">
-            {visible.map((m, idx) => {
+            {visible.map((m) => {
                 let color = 'bg-primary/20 text-primary';
                 const mIdx = MESES.findIndex(x => x.val === m.val);
                 const isControl = mIdx === controlIdx;

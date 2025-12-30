@@ -33,7 +33,7 @@ export const EstrategiaPlanSchema = enum_(EstrategiaPlan);
 export enum AudienciaPlan {
   ACAMPANTE = 'ACAMPANTE',    // Plan para acampantes/hijos
   DIRIGENTE = 'DIRIGENTE',    // Plan para dirigentes
-  STAFF_BASE = 'STAFF_BASE'   // Plan para staff de base (padres en cocina, etc.)
+  BASE = 'BASE'   // Plan para staff de base (padres en cocina, etc.)
 }
 
 export const AudienciaPlanSchema = enum_(AudienciaPlan);
@@ -85,6 +85,8 @@ export const PlanPagoSchema = object({
   // Política de devolución por baja
   mesLimiteDevolucion100: optional(nullable(number())),
   mesLimiteDevolucion50: optional(nullable(number())),
+  // Restricción de inscripción
+  mesLimiteInscripcion: optional(nullable(number())),
 });
 
 export type PlanPago = InferOutput<typeof PlanPagoSchema>;
@@ -120,9 +122,12 @@ export const PlanPagoRequestSchema = object({
   cuotasMinimasAntesControl: optional(number()),   // Cuotas mínimas antes del mes de control
   mesesAtrasoParaTransicion: optional(number()),   // Meses de atraso para activar transición (default: 2)
 
-  // Política de devolución por baja
+  // Política de devoluc ión por baja
   mesLimiteDevolucion100: optional(number()),      // Hasta este mes: 100% devolución
   mesLimiteDevolucion50: optional(number()),       // Hasta este mes: 50% devolución
+
+  // Restricción de inscripción
+  mesLimiteInscripcion: optional(number()),        // Mes límite para inscribirse (1-12)
 });
 
 export type PlanPagoRequest = InferOutput<typeof PlanPagoRequestSchema>;

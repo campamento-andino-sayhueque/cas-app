@@ -149,17 +149,45 @@ export function ModalInscripcion({
             </div>
           </div>
 
+          {/* Info de Límite de Inscripción */}
+          {plan.mesLimiteInscripcion && (
+            <div className={`rounded-lg p-3 flex items-start gap-3 border ${
+              getMesNumero(plan.mesLimiteInscripcion) === mesActual 
+                ? 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800' 
+                : 'bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800'
+            }`}>
+              <Calendar className={`w-5 h-5 flex-shrink-0 mt-0.5 ${
+                getMesNumero(plan.mesLimiteInscripcion) === mesActual ? 'text-red-600' : 'text-blue-600'
+              }`} />
+              <div>
+                <p className={`font-medium text-sm ${
+                  getMesNumero(plan.mesLimiteInscripcion) === mesActual ? 'text-red-800 dark:text-red-200' : 'text-blue-800 dark:text-blue-200'
+                }`}>
+                  Período de inscripción
+                </p>
+                <p className={`text-xs ${
+                  getMesNumero(plan.mesLimiteInscripcion) === mesActual ? 'text-red-700 dark:text-red-300' : 'text-blue-700 dark:text-blue-300'
+                }`}>
+                  {getMesNumero(plan.mesLimiteInscripcion) === mesActual 
+                    ? `¡Última oportunidad! La inscripción cierra en ${getMesNombre(plan.mesLimiteInscripcion)}.`
+                    : `Podés inscribirte a este plan hasta ${getMesNombre(plan.mesLimiteInscripcion)}.`
+                  }
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Alerta si hay cuotas atrasadas */}
           {cuotasAtrasadas > 0 && (
-            <div className="bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800 rounded-lg p-3 flex items-start gap-3">
+            <div className="bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800 rounded-lg p-3 flex items-start gap-3 shadow-sm">
               <AlertTriangle className="w-5 h-5 text-orange-600 mt-0.5 flex-shrink-0" />
               <div>
                 <p className="font-medium text-orange-800 dark:text-orange-200 text-sm">
-                  Atención: Inscripción tardía
+                  Inscripción tardía (Plan heredado)
                 </p>
                 <p className="text-xs text-orange-700 dark:text-orange-300">
                   El plan comenzó en {getMesNombre(plan.mesInicio)}. Al inscribirte ahora en {mesInicioNombre}, 
-                  ya tendrás {cuotasAtrasadas} cuota{cuotasAtrasadas > 1 ? 's' : ''} pendiente{cuotasAtrasadas > 1 ? 's' : ''} de los meses anteriores.
+                  se generarán {cuotasAtrasadas} cuota{cuotasAtrasadas > 1 ? 's' : ''} pendiente{cuotasAtrasadas > 1 ? 's' : ''} para ponerte al día.
                 </p>
               </div>
             </div>
