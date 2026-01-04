@@ -1,0 +1,24 @@
+{
+  "projects": {
+    "default": "authzen-gma61",
+    "dev": "authzen-gma61",
+    "prod": "cas-web-465521"
+  },
+  "targets": {
+    "cas-web-465521": {
+      "hosting": {
+        "casayhueque": [
+          "casayhueque"
+        ]
+      }
+    },
+    "authzen-gma61": {
+      "hosting": {
+        "casayhueque": [
+          "authzen-gma61"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}
