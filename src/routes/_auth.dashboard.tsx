@@ -1,6 +1,6 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { useAuth } from "../hooks/useAuth";
-import { Wallet, ChevronRight, Settings } from "lucide-react";
+import { Wallet, ChevronRight, Settings, Users } from "lucide-react";
 import { FamiliaWidget } from "../components/familia/FamiliaWidget";
 
 export const Route = createFileRoute("/_auth/dashboard")({
@@ -15,6 +15,9 @@ function DashboardComponent() {
   
   // Check if user can manage payment plans (CONSEJO group)
   const canManagePlanes = hasGroup('CONSEJO') || hasRole('admin');
+  
+  // Check if user can access user management (DIRIGENTE or CONSEJO)
+  const canAccessUsuarios = hasRole('dirigente') || hasGroup('CONSEJO') || hasRole('admin');
 
   return (
     <div className="p-6 space-y-6">
@@ -30,29 +33,31 @@ function DashboardComponent() {
       </section>
 
       {/* Admin Quick Access */}
-      {canAccessTesoreria && (
+      {(canAccessTesoreria || canAccessUsuarios) && (
         <section className="space-y-3">
           <h2 className="text-lg font-semibold text-muted-foreground">Administración</h2>
           
-          <Link 
-            to="/tesoreria"
-            className="flex items-center justify-between p-4 border rounded-xl bg-gradient-to-r from-violet-50 to-purple-50 dark:from-violet-950/30 dark:to-purple-950/30 border-violet-200 dark:border-violet-800 hover:shadow-md transition-all group"
-          >
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-violet-100 dark:bg-violet-900 flex items-center justify-center">
-                <Wallet className="w-6 h-6 text-violet-600 dark:text-violet-400" />
+          {canAccessTesoreria && (
+            <Link 
+              to="/tesoreria"
+              className="flex items-center justify-between p-4 border rounded-xl bg-gradient-to-r from-violet-50 to-purple-50 dark:from-violet-950/30 dark:to-purple-950/30 border-violet-200 dark:border-violet-800 hover:shadow-md transition-all group"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-violet-100 dark:bg-violet-900 flex items-center justify-center">
+                  <Wallet className="w-6 h-6 text-violet-600 dark:text-violet-400" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-violet-900 dark:text-violet-100">
+                    Tesorería
+                  </h3>
+                  <p className="text-sm text-violet-700 dark:text-violet-300">
+                    Gestión de pagos e inscripciones
+                  </p>
+                </div>
               </div>
-              <div>
-                <h3 className="font-semibold text-violet-900 dark:text-violet-100">
-                  Tesorería
-                </h3>
-                <p className="text-sm text-violet-700 dark:text-violet-300">
-                  Gestión de pagos e inscripciones
-                </p>
-              </div>
-            </div>
-            <ChevronRight className="w-5 h-5 text-violet-400 group-hover:translate-x-1 transition-transform" />
-          </Link>
+              <ChevronRight className="w-5 h-5 text-violet-400 group-hover:translate-x-1 transition-transform" />
+            </Link>
+          )}
 
           {/* Definición de Planes - Only for CONSEJO members */}
           {canManagePlanes && (
@@ -76,9 +81,31 @@ function DashboardComponent() {
               <ChevronRight className="w-5 h-5 text-amber-400 group-hover:translate-x-1 transition-transform" />
             </Link>
           )}
+
+          {/* Usuarios - For DIRIGENTE and CONSEJO */}
+          {canAccessUsuarios && (
+            <Link 
+              to="/usuarios"
+              className="flex items-center justify-between p-4 border rounded-xl bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-950/30 dark:to-cyan-950/30 border-blue-200 dark:border-blue-800 hover:shadow-md transition-all group"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+                  <Users className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-blue-900 dark:text-blue-100">
+                    Usuarios
+                  </h3>
+                  <p className="text-sm text-blue-700 dark:text-blue-300">
+                    Gestión de usuarios y roles
+                  </p>
+                </div>
+              </div>
+              <ChevronRight className="w-5 h-5 text-blue-400 group-hover:translate-x-1 transition-transform" />
+            </Link>
+          )}
         </section>
       )}
     </div>
   );
 }
-

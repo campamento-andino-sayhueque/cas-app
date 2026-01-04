@@ -1,0 +1,165 @@
+import { useState, useMemo } from 'react';
+import { 
+    Table, 
+    TableBody, 
+    TableCell, 
+    TableHead, 
+    TableHeader, 
+    TableRow 
+} from '../ui/table';
+import { Input } from '../ui/input';
+import { 
+    Select, 
+    SelectContent, 
+    SelectItem, 
+    SelectTrigger, 
+    SelectValue 
+} from '../ui/select';
+import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
+import { Badge } from '../ui/badge';
+import { GestorRoles } from './GestorRoles';
+import { Search, Users, Loader2 } from 'lucide-react';
+import type { UsuarioAdmin } from '../../api/services/usuariosAdmin';
+
+interface TablaUsuariosProps {
+    usuarios: UsuarioAdmin[];
+    cargando: boolean;
+    onVerDetalle?: (usuario: UsuarioAdmin) => void;
+}
+
+const ALL_ROLES = ['ADMIN', 'DIRIGENTE', 'PADRE', 'ACAMPANTE'];
+
+export function TablaUsuarios({ usuarios, cargando, onVerDetalle }: TablaUsuariosProps) {
+    const [busqueda, setBusqueda] = useState('');
+    const [filtroRol, setFiltroRol] = useState<string>('todos');
+
+    const usuariosFiltrados = useMemo(() => {
+        return usuarios.filter(u => {
+            // Filtro por búsqueda
+            const matchBusqueda = busqueda === '' || 
+                u.nombreMostrar.toLowerCase().includes(busqueda.toLowerCase()) ||
+                u.email.toLowerCase().includes(busqueda.toLowerCase());
+
+            // Filtro por rol
+            const matchRol = filtroRol === 'todos' || u.roles.includes(filtroRol);
+
+            return matchBusqueda && matchRol;
+        });
+    }, [usuarios, busqueda, filtroRol]);
+
+    const getInitials = (nombre: string) => {
+        return nombre
+            .split(' ')
+            .map(n => n[0])
+            .join('')
+            .toUpperCase()
+            .slice(0, 2);
+    };
+
+    if (cargando) {
+        return (
+            <div className="flex items-center justify-center py-12">
+                <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+            </div>
+        );
+    }
+
+    return (
+        <div className="space-y-4">
+            {/* Filtros */}
+            <div className="flex flex-col sm:flex-row gap-4">
+                <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                        placeholder="Buscar por nombre o email..."
+                        value={busqueda}
+                        onChange={(e) => setBusqueda(e.target.value)}
+                        className="pl-10"
+                    />
+                </div>
+                <Select value={filtroRol} onValueChange={setFiltroRol}>
+                    <SelectTrigger className="w-full sm:w-48">
+                        <SelectValue placeholder="Filtrar por rol" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="todos">Todos los roles</SelectItem>
+                        {ALL_ROLES.map(rol => (
+                            <SelectItem key={rol} value={rol}>{rol}</SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+            </div>
+
+            {/* Contador */}
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Users className="w-4 h-4" />
+                <span>{usuariosFiltrados.length} usuarios</span>
+            </div>
+
+            {/* Tabla */}
+            <div className="rounded-lg border">
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead className="w-12"></TableHead>
+                            <TableHead>Nombre</TableHead>
+                            <TableHead className="hidden sm:table-cell">Email</TableHead>
+                            <TableHead>Roles</TableHead>
+                            <TableHead className="hidden md:table-cell">Estado</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {usuariosFiltrados.length === 0 ? (
+                            <TableRow>
+                                <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                                    No se encontraron usuarios
+                                </TableCell>
+                            </TableRow>
+                        ) : (
+                            usuariosFiltrados.map(usuario => (
+                                <TableRow 
+                                    key={usuario.id}
+                                    className="cursor-pointer hover:bg-muted/50"
+                                    onClick={() => onVerDetalle?.(usuario)}
+                                >
+                                    <TableCell>
+                                        <Avatar className="w-8 h-8">
+                                            <AvatarImage src={usuario.urlFoto ?? undefined} />
+                                            <AvatarFallback className="text-xs">
+                                                {getInitials(usuario.nombreMostrar)}
+                                            </AvatarFallback>
+                                        </Avatar>
+                                    </TableCell>
+                                    <TableCell>
+                                        <div>
+                                            <div className="font-medium">{usuario.nombreMostrar}</div>
+                                            <div className="text-xs text-muted-foreground sm:hidden">
+                                                {usuario.email}
+                                            </div>
+                                        </div>
+                                    </TableCell>
+                                    <TableCell className="hidden sm:table-cell text-muted-foreground">
+                                        {usuario.email}
+                                    </TableCell>
+                                    <TableCell onClick={(e) => e.stopPropagation()}>
+                                        <GestorRoles 
+                                            usuarioId={usuario.id} 
+                                            rolesActuales={usuario.roles}
+                                        />
+                                    </TableCell>
+                                    <TableCell className="hidden md:table-cell">
+                                        <Badge 
+                                            variant={usuario.estado === 'ACTIVO' ? 'default' : 'secondary'}
+                                        >
+                                            {usuario.estado}
+                                        </Badge>
+                                    </TableCell>
+                                </TableRow>
+                            ))
+                        )}
+                    </TableBody>
+                </Table>
+            </div>
+        </div>
+    );
+}
