@@ -25,8 +25,13 @@ function HomeComponent() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 dark:bg-slate-950">
       <div className="text-center p-8">
+        <img 
+          src="/logo_transparent.png" 
+          alt="Logo Campamento Andino Sayhueque" 
+          className="w-32 h-32 mx-auto mb-6"
+        />
         <h2 className="text-xl font-semibold mb-4 text-slate-900 dark:text-white">
-          Bienvenido al CAS
+          Bienvenido al Campamento
         </h2>
         <p className="text-gray-600 dark:text-gray-400 mb-6">
           Sistema de gestión de campamento
