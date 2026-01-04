@@ -12,7 +12,7 @@ async function cleanup() {
 
   // Delete test users from Keycloak
   console.log('Deleting Keycloak users:');
-  for (const [role, user] of Object.entries(TEST_USERS)) {
+  for (const [_role, user] of Object.entries(TEST_USERS)) {
     try {
       await deleteTestUser(user.username);
     } catch (error) {
