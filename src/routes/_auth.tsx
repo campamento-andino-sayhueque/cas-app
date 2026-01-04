@@ -37,21 +37,28 @@ function AuthLayout() {
         // Don't do anything while loading
         if (!auth.isAuthenticated || isLoadingUsuario || isLoadingFamilia) return;
 
-        // Don't redirect if already on onboarding page
-        if (location.pathname === "/onboarding") return;
-
         // Check if user is VIP (has dirigente role)
         const isVip = VIP_ROLES.some((role) => auth.hasRole(role));
 
         // If VIP, no need to check onboarding
         if (isVip) return;
 
-        // If user has familia, they've completed onboarding (even if profile incomplete)
+        // If user has familia and is on onboarding page, redirect to dashboard
+        // This prevents trying to join/create when they already have a family
+        if (familia?.uid && location.pathname === "/onboarding") {
+            navigate({ to: "/dashboard" });
+            return;
+        }
+
+        // Don't redirect if already on onboarding page
+        if (location.pathname === "/onboarding") return;
+
+        // If user has familia (uid is not null), they've completed onboarding
         // They can complete their profile later from the profile page
-        if (familia) return;
+        if (familia?.uid) return;
 
         // If user data loaded but no familia, redirect to onboarding
-        if (usuario && !familia) {
+        if (usuario && !familia?.uid) {
             navigate({ to: "/onboarding" });
         }
     }, [

@@ -5,7 +5,7 @@ export const MiembroFamiliaSchema = object({
     usuarioUid: string(),
     nombre: string(),
     email: string(),
-    rol: string(),
+    relacion: nullable(string()), // null para creadores de familia sin relación específica
     esResponsableEconomico: boolean()
 });
 
@@ -38,13 +38,13 @@ export const RegenerarCodigoSchema = object({
 
 export type RegenerarCodigo = InferOutput<typeof RegenerarCodigoSchema>;
 
-// Request types (no need for schemas, just types)
+// Request types
 export interface CrearFamiliaRequest {
     nombreFamilia: string;
-    rol?: string;
+    // Ya no necesita rol - el creador siempre es responsable económico
 }
 
 export interface UnirseConCodigoRequest {
     codigo: string;
-    rol: string;
+    relacion: string; // RelacionFamiliar: PADRE, MADRE, HIJO, TUTOR, ABUELO, OTRO
 }

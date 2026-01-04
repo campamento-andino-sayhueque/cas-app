@@ -180,7 +180,7 @@ export function FamiliaWidget() {
                                         </div>
                                         <div>
                                             <p className="text-sm font-medium">{miembro.nombre}</p>
-                                            <p className="text-xs text-muted-foreground capitalize">{miembro.rol}</p>
+                                            <p className="text-xs text-muted-foreground capitalize">{miembro.relacion || "Creador"}</p>
                                         </div>
                                     </div>
                                     {miembro.esResponsableEconomico && (

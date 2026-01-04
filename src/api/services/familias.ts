@@ -45,7 +45,7 @@ export const familiasService = {
     unirseConCodigo: async (data: UnirseConCodigoRequest): Promise<MiFamilia> => {
         const response = await client.post('/familias/unirse', {
             codigo: data.codigo.toUpperCase(),
-            rol: data.rol
+            relacion: data.relacion
         });
         return parse(MiFamiliaSchema, response.data);
     },

@@ -11,17 +11,12 @@ import { toast } from "sonner";
 import type { MiFamilia } from "../../api/schemas/familia";
 
 type OnboardingStep = "select" | "crear" | "unirse" | "success";
-// Roles disponibles al crear familia
-const ROLES_CREADOR = [
-    { value: "PADRE", label: "Soy Padre/Madre/Tutor" },
-    { value: "HIJO", label: "Soy Acampante (hijo/a)" },
-];
 
-// Roles disponibles al unirse a familia
-const ROLES_UNIRSE = [
+// Relaciones familiares disponibles al unirse a una familia
+const RELACIONES_FAMILIARES = [
     { value: "PADRE", label: "Padre" },
     { value: "MADRE", label: "Madre" },
-    { value: "TUTOR_LEGAL", label: "Tutor Legal" },
+    { value: "TUTOR", label: "Tutor Legal" },
     { value: "HIJO", label: "Hijo/a" },
     { value: "ABUELO", label: "Abuelo/a" },
     { value: "OTRO", label: "Otro familiar" },
@@ -131,7 +126,6 @@ function SelectionStep({ onCrear, onUnirse }: { onCrear: () => void; onUnirse: (
 // Step 2A: Crear grupo familiar
 function CrearFamiliaStep({ onBack, onSuccess }: { onBack: () => void; onSuccess: (familia: MiFamilia) => void }) {
     const [apellidoFamilia, setApellidoFamilia] = useState("");
-    const [rol, setRol] = useState("PADRE");
     const crearFamilia = useCrearFamilia();
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -182,22 +176,6 @@ function CrearFamiliaStep({ onBack, onSuccess }: { onBack: () => void; onSuccess
             <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="space-y-2">
-                        <Label htmlFor="rol">¿Quién sos en la familia?</Label>
-                        <Select value={rol} onValueChange={setRol} disabled={crearFamilia.isPending}>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Selecciona tu rol" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {ROLES_CREADOR.map((r) => (
-                                    <SelectItem key={r.value} value={r.value}>
-                                        {r.label}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-
-                    <div className="space-y-2">
                         <Label htmlFor="apellidoFamilia">¿Cuál es el apellido familiar?</Label>
                         <Input
                             id="apellidoFamilia"
@@ -227,7 +205,7 @@ function CrearFamiliaStep({ onBack, onSuccess }: { onBack: () => void; onSuccess
                         ) : (
                             "🚀 Crear y Obtener mi Código"
                         )}
-                    </Button>
+                </Button>
                 </form>
             </CardContent>
         </Card>
@@ -340,7 +318,7 @@ Código: *${codigo}*`;
 // Step 2B: Unirse a familia con código
 function UnirseStep({ codigoInicial, onBack, onSuccess }: { codigoInicial?: string; onBack: () => void; onSuccess: () => void }) {
     const [codigo, setCodigo] = useState(codigoInicial?.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6) || "");
-    const [rol, setRol] = useState("PADRE");
+    const [relacion, setRelacion] = useState("PADRE");
     const validacion = useValidarCodigo(codigo);
     const unirse = useUnirseConCodigo();
 
@@ -358,7 +336,7 @@ function UnirseStep({ codigoInicial, onBack, onSuccess }: { codigoInicial?: stri
         }
 
         try {
-            await unirse.mutateAsync({ codigo, rol });
+            await unirse.mutateAsync({ codigo, relacion });
             onSuccess();
         } catch (error: unknown) {
             console.error("Error uniéndose a familia:", error);
@@ -433,13 +411,13 @@ function UnirseStep({ codigoInicial, onBack, onSuccess }: { codigoInicial?: stri
                     </div>
 
                     <div className="space-y-2">
-                        <Label htmlFor="rol">Tu parentesco</Label>
-                        <Select value={rol} onValueChange={setRol} disabled={unirse.isPending}>
+                        <Label htmlFor="relacion">Tu parentesco</Label>
+                        <Select value={relacion} onValueChange={setRelacion} disabled={unirse.isPending}>
                             <SelectTrigger>
-                                <SelectValue placeholder="Selecciona tu rol" />
+                                <SelectValue placeholder="Selecciona tu parentesco" />
                             </SelectTrigger>
                             <SelectContent>
-                                {ROLES_UNIRSE.map((r) => (
+                                {RELACIONES_FAMILIARES.map((r) => (
                                     <SelectItem key={r.value} value={r.value}>
                                         {r.label}
                                     </SelectItem>
