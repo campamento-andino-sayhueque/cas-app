@@ -3,82 +3,135 @@ import { createFileRoute } from '@tanstack/react-router';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { TablaUsuarios, DetalleUsuario } from '../components/usuarios';
 import { useUsuariosAdmin } from '../hooks/useUsuariosAdmin';
+import { useGruposAcampantes, useGruposDirigentes } from '../hooks/useGrupos';
 import type { UsuarioAdmin } from '../api/services/usuariosAdmin';
-import { LayoutDashboard, Users, Shield } from 'lucide-react';
+import { Users, Tent, Shield, ChevronRight } from 'lucide-react';
+import { Badge } from '../components/ui/badge';
 
 export const Route = createFileRoute('/_auth/usuarios')({
-    component: UsuariosPage,
+    component: AcampantesPage,
 });
 
 /**
- * Dashboard de gestión de usuarios.
+ * Dashboard de gestión de acampantes y grupos.
  * Accesible por DIRIGENTE y ADMIN.
- * Solo ADMIN y miembros del Consejo pueden asignar roles.
  */
-function UsuariosPage() {
-    const [activeTab, setActiveTab] = useState('usuarios');
+function AcampantesPage() {
+    const [activeTab, setActiveTab] = useState('acampantes');
     const [usuarioSeleccionado, setUsuarioSeleccionado] = useState<UsuarioAdmin | null>(null);
 
     const { usuarios, cargando } = useUsuariosAdmin();
+    const { grupos: gruposAcampantes } = useGruposAcampantes();
+    const { grupos: gruposDirigentes } = useGruposDirigentes();
 
-    // Stats rápidos
-    const stats = {
-        total: usuarios.length,
-        activos: usuarios.filter(u => u.estado === 'ACTIVO').length,
-        admins: usuarios.filter(u => u.roles.includes('ADMIN')).length,
-        dirigentes: usuarios.filter(u => u.roles.includes('DIRIGENTE')).length,
-        padres: usuarios.filter(u => u.roles.includes('PADRE')).length,
-        acampantes: usuarios.filter(u => u.roles.includes('ACAMPANTE')).length,
-    };
+    // Filtrar solo acampantes para esta vista
+    const acampantes = usuarios.filter(u => u.roles.includes('ACAMPANTE'));
 
     return (
         <div className="p-6 space-y-6 max-w-7xl mx-auto">
             {/* Header */}
             <div className="space-y-2">
-                <h1 className="text-3xl font-bold tracking-tight">Usuarios</h1>
+                <h1 className="text-3xl font-bold tracking-tight">Acampantes</h1>
                 <p className="text-muted-foreground">
-                    Gestión de usuarios y asignación de roles del sistema.
+                    Gestión de acampantes, grupos y asignaciones.
                 </p>
             </div>
 
             {/* Main content with tabs */}
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
                 <TabsList className="grid w-full max-w-md grid-cols-2">
-                    <TabsTrigger value="dashboard" className="flex items-center gap-2">
-                        <LayoutDashboard className="w-4 h-4" />
-                        <span className="hidden sm:inline">Dashboard</span>
-                    </TabsTrigger>
-                    <TabsTrigger value="usuarios" className="flex items-center gap-2">
+                    <TabsTrigger value="acampantes" className="flex items-center gap-2">
                         <Users className="w-4 h-4" />
-                        <span className="hidden sm:inline">Usuarios</span>
+                        <span className="hidden sm:inline">Acampantes</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="grupos" className="flex items-center gap-2">
+                        <Tent className="w-4 h-4" />
+                        <span className="hidden sm:inline">Grupos</span>
                     </TabsTrigger>
                 </TabsList>
 
-                {/* Dashboard Tab */}
-                <TabsContent value="dashboard" className="space-y-6">
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                        <StatCard label="Total" value={stats.total} icon={Users} />
-                        <StatCard label="Activos" value={stats.activos} color="green" />
-                        <StatCard label="Admins" value={stats.admins} color="red" icon={Shield} />
-                        <StatCard label="Dirigentes" value={stats.dirigentes} color="blue" />
-                        <StatCard label="Padres" value={stats.padres} color="green" />
-                        <StatCard label="Acampantes" value={stats.acampantes} color="purple" />
-                    </div>
-                    
-                    <div className="bg-muted/30 rounded-lg p-6 text-center text-muted-foreground">
-                        <p>
-                            Usa la pestaña <strong>Usuarios</strong> para ver y gestionar usuarios individualmente.
-                        </p>
-                    </div>
-                </TabsContent>
-
-                {/* Users Tab */}
-                <TabsContent value="usuarios" className="space-y-6">
+                {/* Acampantes Tab */}
+                <TabsContent value="acampantes" className="space-y-6">
                     <TablaUsuarios
                         usuarios={usuarios}
                         cargando={cargando}
                         onVerDetalle={setUsuarioSeleccionado}
                     />
+                </TabsContent>
+
+                {/* Grupos Tab */}
+                <TabsContent value="grupos" className="space-y-6">
+                    <div className="grid md:grid-cols-2 gap-6">
+                        {/* Grupos de Acampantes */}
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-2">
+                                <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900/30">
+                                    <Tent className="w-5 h-5 text-green-600 dark:text-green-400" />
+                                </div>
+                                <h2 className="text-lg font-semibold">Grupos de Acampantes</h2>
+                            </div>
+                            
+                            <div className="space-y-2">
+                                {gruposAcampantes.length === 0 ? (
+                                    <p className="text-muted-foreground text-sm p-4 bg-muted/30 rounded-lg">
+                                        No hay grupos de acampantes configurados.
+                                    </p>
+                                ) : (
+                                    gruposAcampantes.map(grupo => (
+                                        <GrupoCard 
+                                            key={grupo.id} 
+                                            nombre={grupo.nombre} 
+                                            path={grupo.path}
+                                            color="green"
+                                        />
+                                    ))
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Grupos de Dirigentes */}
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-2">
+                                <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30">
+                                    <Shield className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                                </div>
+                                <h2 className="text-lg font-semibold">Grupos de Dirigentes</h2>
+                            </div>
+                            
+                            <div className="space-y-2">
+                                {gruposDirigentes.length === 0 ? (
+                                    <p className="text-muted-foreground text-sm p-4 bg-muted/30 rounded-lg">
+                                        No hay grupos de dirigentes configurados.
+                                    </p>
+                                ) : (
+                                    gruposDirigentes.map(grupo => (
+                                        <GrupoCard 
+                                            key={grupo.id} 
+                                            nombre={grupo.nombre} 
+                                            path={grupo.path}
+                                            color="blue"
+                                        />
+                                    ))
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {/* Resumen */}
+                    <div className="bg-muted/30 rounded-lg p-6 flex items-center justify-between">
+                        <div>
+                            <p className="text-sm text-muted-foreground">Total acampantes asignados a grupos</p>
+                            <p className="text-2xl font-bold">{acampantes.length}</p>
+                        </div>
+                        <div className="flex gap-2">
+                            <Badge variant="outline" className="text-green-600">
+                                {gruposAcampantes.length} grupos de acampantes
+                            </Badge>
+                            <Badge variant="outline" className="text-blue-600">
+                                {gruposDirigentes.length} grupos de dirigentes
+                            </Badge>
+                        </div>
+                    </div>
                 </TabsContent>
             </Tabs>
 
@@ -92,30 +145,27 @@ function UsuariosPage() {
     );
 }
 
-// Helper component for stats
-interface StatCardProps {
-    label: string;
-    value: number;
-    color?: 'red' | 'blue' | 'green' | 'purple';
-    icon?: React.ComponentType<{ className?: string }>;
+// Card component for groups
+interface GrupoCardProps {
+    nombre: string;
+    path: string;
+    color: 'green' | 'blue';
 }
 
-function StatCard({ label, value, color, icon: Icon }: StatCardProps) {
+function GrupoCard({ nombre, path, color }: GrupoCardProps) {
     const colorClasses = {
-        red: 'text-red-600 bg-red-50 dark:bg-red-950/30',
-        blue: 'text-blue-600 bg-blue-50 dark:bg-blue-950/30',
-        green: 'text-green-600 bg-green-50 dark:bg-green-950/30',
-        purple: 'text-purple-600 bg-purple-50 dark:bg-purple-950/30',
+        green: 'border-green-200 hover:border-green-400 bg-green-50/50 dark:bg-green-950/20',
+        blue: 'border-blue-200 hover:border-blue-400 bg-blue-50/50 dark:bg-blue-950/20',
     };
 
     return (
-        <div className={`rounded-lg p-4 ${color ? colorClasses[color] : 'bg-muted/50'}`}>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-                {Icon && <Icon className="w-4 h-4" />}
-                {label}
-            </div>
-            <div className="text-2xl font-bold">
-                {value}
+        <div className={`p-4 rounded-lg border-2 transition-colors cursor-pointer ${colorClasses[color]}`}>
+            <div className="flex items-center justify-between">
+                <div>
+                    <h3 className="font-medium">{nombre}</h3>
+                    <p className="text-xs text-muted-foreground">{path}</p>
+                </div>
+                <ChevronRight className="w-5 h-5 text-muted-foreground" />
             </div>
         </div>
     );

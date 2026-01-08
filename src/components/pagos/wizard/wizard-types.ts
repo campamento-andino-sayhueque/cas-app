@@ -1,8 +1,11 @@
 /**
  * Tipos y constantes del Wizard de Planes de Pago.
+ * 
+ * NOTA: El límite de inscripción se calcula automáticamente como mesInicioControlAtraso - 1
+ * por eso no hay un step separado para definirlo.
  */
 
-export const PLAN_A_SUBSTEPS = ['datos', 'vigencia', 'monto', 'inscripcion'] as const;
+export const PLAN_A_SUBSTEPS = ['datos', 'vigencia', 'monto'] as const;
 export type PlanASubStep = typeof PLAN_A_SUBSTEPS[number];
 
 export const MESES = [
@@ -22,4 +25,12 @@ export const MESES = [
 
 export interface WizardStepProps {
     form: any;
+}
+
+/** Retorna el último día del mes (28, 29, 30 o 31) */
+export function ultimoDiaMes(mes: number | undefined): number {
+    if (!mes) return 30;
+    // Usamos año no bisiesto como referencia
+    const diasPorMes = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+    return diasPorMes[mes - 1] ?? 30;
 }

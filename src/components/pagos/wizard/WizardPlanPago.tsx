@@ -24,7 +24,6 @@ import {
     StepPlanADatos,
     StepPlanAVigencia,
     StepPlanAMonto,
-    StepPlanAInscripcion,
     StepPlanB,
     StepMigracion,
     StepDevolucion,
@@ -43,7 +42,6 @@ const PLAN_A_SUBSTEP_LABELS = {
     datos: { title: 'Datos', icon: LayoutList },
     vigencia: { title: 'Vigencia', icon: CalendarDays },
     monto: { title: 'Monto', icon: DollarSign },
-    inscripcion: { title: 'Inscripción', icon: CalendarDays },
 };
 
 interface WizardPlanPagoProps {
@@ -159,7 +157,7 @@ function WizardPlanPagoContent({ abierto, onCerrar, onGuardar, cargando }: Wizar
         
         switch (currentStepId) {
             case 'planA':
-                stepFieldsToValidate = ['nombreParaMostrar', 'anio', 'montoTotal', 'mesLimiteInscripcion'];
+                stepFieldsToValidate = ['nombreParaMostrar', 'anio', 'montoTotal'];
                 break;
             case 'planB':
                 stepFieldsToValidate = ['montoTotalPlanB'];
@@ -300,8 +298,7 @@ function WizardPlanPagoContent({ abierto, onCerrar, onGuardar, cargando }: Wizar
                         planA: () => {
                             if (planASubStep === 0) return <StepPlanADatos form={form} />;
                             if (planASubStep === 1) return <StepPlanAVigencia form={form} />;
-                            if (planASubStep === 2) return <StepPlanAMonto form={form} />;
-                            return <StepPlanAInscripcion form={form} />;
+                            return <StepPlanAMonto form={form} />;
                         },
                         planB: () => <StepPlanB form={form} />,
                         migracion: () => <StepMigracion form={form} />,

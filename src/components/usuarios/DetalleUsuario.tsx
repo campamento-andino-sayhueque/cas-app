@@ -8,6 +8,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Badge } from '../ui/badge';
 import { Separator } from '../ui/separator';
 import { GestorRoles } from './GestorRoles';
+import { GestorGrupos } from './GestorGrupos';
+import { useGruposUsuario } from '../../hooks/useGrupos';
 import { 
     Mail, 
     Shield, 
@@ -15,7 +17,8 @@ import {
     XCircle, 
     User, 
     Hash,
-    Clock
+    Clock,
+    Users
 } from 'lucide-react';
 import type { UsuarioAdmin } from '../../api/services/usuariosAdmin';
 
@@ -26,6 +29,8 @@ interface DetalleUsuarioProps {
 }
 
 export function DetalleUsuario({ usuario, open, onClose }: DetalleUsuarioProps) {
+    const { grupos } = useGruposUsuario(usuario?.id ?? 0, !!usuario);
+    
     if (!usuario) return null;
 
     const getInitials = (nombre: string) => {
@@ -102,6 +107,28 @@ export function DetalleUsuario({ usuario, open, onClose }: DetalleUsuarioProps) 
                         <p className="text-xs text-muted-foreground px-1">
                             Los cambios de rol se aplican inmediatamente. 
                             El usuario deberá cerrar sesión para ver los cambios.
+                        </p>
+                    </div>
+
+                    <Separator />
+
+                    {/* Sección de Grupos */}
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-2">
+                            <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900/30">
+                                <Users className="w-4 h-4 text-green-600 dark:text-green-400" />
+                            </div>
+                            <h4 className="font-semibold">Grupos</h4>
+                        </div>
+                        <div className="p-4 rounded-xl border bg-card">
+                            <GestorGrupos 
+                                usuarioId={usuario.id}
+                                gruposActuales={grupos}
+                                rolesUsuario={usuario.roles}
+                            />
+                        </div>
+                        <p className="text-xs text-muted-foreground px-1">
+                            Grupos de acampantes y dirigentes a los que pertenece.
                         </p>
                     </div>
 

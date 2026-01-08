@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Card, CardContent } from '../../../ui/card';
 import { Undo2 } from 'lucide-react';
 import type { WizardStepProps } from '../wizard-types';
-import { MESES } from '../wizard-types';
+import { MESES, ultimoDiaMes } from '../wizard-types';
 
 export function StepDevolucion({ form }: WizardStepProps) {
     return (
@@ -35,43 +35,55 @@ export function StepDevolucion({ form }: WizardStepProps) {
 
                     <div className="grid grid-cols-2 gap-6">
                         <form.Field name="mesLimiteDevolucion100">
-                            {(field: any) => (
-                                <div className="space-y-2">
-                                    <Label className="flex items-center gap-2">
-                                        <span className="w-4 h-4 rounded-full bg-green-500 flex items-center justify-center text-white text-[10px] font-bold">✓</span>
-                                        100% Devolución hasta
-                                    </Label>
-                                    <Select value={String(field.state.value)} onValueChange={(v) => field.handleChange(Number(v))}>
-                                        <SelectTrigger className="border-l-4 border-l-green-500">
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {MESES.map(m => <SelectItem key={m.val} value={String(m.val)}>{m.label}</SelectItem>)}
-                                        </SelectContent>
-                                    </Select>
-                                    <p className="text-xs text-green-600">Reembolso total del saldo a favor</p>
-                                </div>
-                            )}
+                            {(field: any) => {
+                                const mes = field.state.value;
+                                return (
+                                    <div className="space-y-2">
+                                        <Label className="flex items-center gap-2">
+                                            <span className="w-4 h-4 rounded-full bg-green-500 flex items-center justify-center text-white text-[10px] font-bold">✓</span>
+                                            100% Devolución hasta
+                                        </Label>
+                                        <Select value={String(mes)} onValueChange={(v) => field.handleChange(Number(v))}>
+                                            <SelectTrigger className="border-l-4 border-l-green-500">
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {MESES.map(m => <SelectItem key={m.val} value={String(m.val)}>{m.label}</SelectItem>)}
+                                            </SelectContent>
+                                        </Select>
+                                        <div className="text-[10px] leading-tight">
+                                            <p className="font-bold text-green-700">Hasta el {ultimoDiaMes(mes)}/{mes} 23:59hs</p>
+                                            <p className="text-muted-foreground">Reembolso total del saldo a favor</p>
+                                        </div>
+                                    </div>
+                                );
+                            }}
                         </form.Field>
 
                         <form.Field name="mesLimiteDevolucion50">
-                            {(field: any) => (
-                                <div className="space-y-2">
-                                    <Label className="flex items-center gap-2">
-                                        <span className="w-4 h-4 rounded-full bg-yellow-500 flex items-center justify-center text-white text-[10px] font-bold">½</span>
-                                        50% Devolución hasta
-                                    </Label>
-                                    <Select value={String(field.state.value)} onValueChange={(v) => field.handleChange(Number(v))}>
-                                        <SelectTrigger className="border-l-4 border-l-yellow-500">
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {MESES.map(m => <SelectItem key={m.val} value={String(m.val)}>{m.label}</SelectItem>)}
-                                        </SelectContent>
-                                    </Select>
-                                    <p className="text-xs text-yellow-600">Reembolso parcial del saldo a favor</p>
-                                </div>
-                            )}
+                            {(field: any) => {
+                                const mes = field.state.value;
+                                return (
+                                    <div className="space-y-2">
+                                        <Label className="flex items-center gap-2">
+                                            <span className="w-4 h-4 rounded-full bg-yellow-500 flex items-center justify-center text-white text-[10px] font-bold">½</span>
+                                            50% Devolución hasta
+                                        </Label>
+                                        <Select value={String(mes)} onValueChange={(v) => field.handleChange(Number(v))}>
+                                            <SelectTrigger className="border-l-4 border-l-yellow-500">
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {MESES.map(m => <SelectItem key={m.val} value={String(m.val)}>{m.label}</SelectItem>)}
+                                            </SelectContent>
+                                        </Select>
+                                        <div className="text-[10px] leading-tight">
+                                            <p className="font-bold text-yellow-700">Hasta el {ultimoDiaMes(mes)}/{mes} 23:59hs</p>
+                                            <p className="text-muted-foreground">Reembolso parcial del saldo a favor</p>
+                                        </div>
+                                    </div>
+                                );
+                            }}
                         </form.Field>
                     </div>
 

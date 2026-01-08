@@ -3,7 +3,7 @@
  */
 import { CheckCircle2 } from 'lucide-react';
 import type { WizardStepProps } from '../wizard-types';
-import { MESES } from '../wizard-types';
+import { MESES, ultimoDiaMes } from '../wizard-types';
 
 export function StepRevision({ form }: WizardStepProps) {
     const formatCurrency = (val: number) => {
@@ -93,11 +93,15 @@ export function StepRevision({ form }: WizardStepProps) {
                             <dl className="space-y-1 text-sm">
                                 <div className="flex justify-between">
                                     <dt className="text-muted-foreground">100% hasta</dt>
-                                    <dd className="font-medium text-green-600">{MESES.find(m => m.val === values.mesLimiteDevolucion100)?.label}</dd>
+                                    <dd className="font-medium text-green-600">
+                                        {ultimoDiaMes(values.mesLimiteDevolucion100)}/{values.mesLimiteDevolucion100} 23:59hs
+                                    </dd>
                                 </div>
                                 <div className="flex justify-between">
                                     <dt className="text-muted-foreground">50% hasta</dt>
-                                    <dd className="font-medium text-yellow-600">{MESES.find(m => m.val === values.mesLimiteDevolucion50)?.label}</dd>
+                                    <dd className="font-medium text-yellow-600">
+                                        {ultimoDiaMes(values.mesLimiteDevolucion50)}/{values.mesLimiteDevolucion50} 23:59hs
+                                    </dd>
                                 </div>
                             </dl>
                         </div>

@@ -1,14 +1,50 @@
 /**
  * Lista de Planes Disponibles para Inscripción
- * Diseño minimalista - toda la info detallada está en el Wizard
+ * Muestra todos los planes con estado visual de inscripción abierta/cerrada
  */
 
-import { Crown, Star } from "lucide-react";
+import { Crown, Star, Lock, LockOpen } from "lucide-react";
 import { type PlanPago, AudienciaPlan } from "../../api/schemas/pagos";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "../ui/card";
 import { getAudienciaInfo } from "./utils/audienciaUtils";
+
+/** 
+ * Calcula si un plan tiene inscripción abierta.
+ * El límite se calcula como mesInicioControlAtraso - 1.
+ */
+function calcularEstadoPlan(plan: PlanPago): { abierto: boolean; mensaje: string } {
+  const hoy = new Date();
+  const anioActual = hoy.getFullYear();
+  const mesActual = hoy.getMonth() + 1; // 1-12
+  
+  // Si no tiene año definido, asumir abierto
+  if (!plan.anio) return { abierto: true, mensaje: '' };
+  
+  // Si el plan es de un año futuro, abierto
+  if (plan.anio > anioActual) return { abierto: true, mensaje: '' };
+  
+  // Si el plan es de un año pasado, cerrado
+  if (plan.anio < anioActual) return { abierto: false, mensaje: `Ciclo ${plan.anio} finalizado` };
+  
+  // Calcular mes límite: mesInicioControlAtraso - 1
+  // Si no hay mesInicioControlAtraso, usamos mesLimiteInscripcion como fallback temporal
+  const mesLimite = plan.mesInicioControlAtraso 
+    ? plan.mesInicioControlAtraso - 1 
+    : plan.mesLimiteInscripcion;
+  
+  if (!mesLimite) return { abierto: true, mensaje: '' };
+  
+  const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+  
+  // Si ya pasó el mes límite, cerrado
+  if (mesActual > mesLimite) {
+    return { abierto: false, mensaje: `Inscripción cerró en ${meses[mesLimite - 1]}` };
+  }
+  
+  return { abierto: true, mensaje: `Hasta ${meses[mesLimite - 1]}` };
+}
 
 interface ListaPlanesDisponiblesProps {
   planes: PlanPago[];
@@ -16,30 +52,13 @@ interface ListaPlanesDisponiblesProps {
 }
 
 export function ListaPlanesDisponibles({ planes, onInscribirse }: ListaPlanesDisponiblesProps) {
-  // Filtrar planes cuyo período de inscripción ya cerró
   const hoy = new Date();
   const anioActual = hoy.getFullYear();
-  const mesActual = hoy.getMonth() + 1; // 1-12
 
-  const planesVigentes = planes.filter(plan => {
-    // Si no tiene año definido, mostrar por defecto
-    if (!plan.anio) return true;
-    
-    // Si el plan es de un año futuro, mostrar
-    if (plan.anio > anioActual) return true;
-    
-    // Si el plan es de un año pasado, ocultar
-    if (plan.anio < anioActual) return false;
-    
-    // Mismo año: verificar mes límite de inscripción
-    const mesLimite = plan.mesLimiteInscripcion;
-    if (mesLimite === undefined || mesLimite === null) return true;
-    
-    // Si ya pasó el mes límite, ocultar
-    return mesActual <= mesLimite;
-  });
+  // Filtrar solo planes de años pasados (esos sí los ocultamos)
+  const planesVisibles = planes.filter(plan => !plan.anio || plan.anio >= anioActual);
 
-  if (planesVigentes.length === 0) {
+  if (planesVisibles.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-12 px-4 border-2 border-dashed border-muted-foreground/2 rounded-xl bg-muted/5 text-center space-y-6">
         <div className="relative">
@@ -64,10 +83,12 @@ export function ListaPlanesDisponibles({ planes, onInscribirse }: ListaPlanesDis
 
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {planesVigentes.map((plan) => {
+      {planesVisibles.map((plan) => {
         const esPlanA = plan.estrategia === 'PLAN_A';
         const audienciaInfo = getAudienciaInfo(plan.audiencia as AudienciaPlan | undefined);
         const AudienciaIcon = audienciaInfo.icon;
+        const { abierto, mensaje } = calcularEstadoPlan(plan);
+
 
         return (
           <Card 
@@ -78,8 +99,26 @@ export function ListaPlanesDisponibles({ planes, onInscribirse }: ListaPlanesDis
                 : 'border-slate-300/50 hover:border-slate-400 bg-gradient-to-br from-slate-100/50 to-transparent dark:from-slate-800/20'
               }
             `}
-            onClick={() => onInscribirse(plan)}
+            onClick={() => abierto && onInscribirse(plan)}
           >
+            {/* Estado de inscripción */}
+            <div className="absolute top-2 left-2">
+              <Badge
+                variant={abierto ? "default" : "secondary"}
+                className={`flex items-center gap-1 text-[10px] ${
+                  abierto 
+                    ? 'bg-green-100 text-green-800 border-green-300 dark:bg-green-900/50 dark:text-green-200'
+                    : 'bg-red-100 text-red-800 border-red-300 dark:bg-red-900/50 dark:text-red-200'
+                }`}
+              >
+                {abierto ? <LockOpen className="w-3 h-3" /> : <Lock className="w-3 h-3" />}
+                {abierto ? 'Abierto' : 'Cerrado'}
+              </Badge>
+              {mensaje && (
+                <p className="text-[9px] text-muted-foreground mt-0.5">{mensaje}</p>
+              )}
+            </div>
+
             {/* Top Badges */}
             <div className="absolute top-2 right-2 flex flex-col gap-1 items-end">
               <Badge
@@ -100,8 +139,8 @@ export function ListaPlanesDisponibles({ planes, onInscribirse }: ListaPlanesDis
               </Badge>
             </div>
 
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg flex items-center gap-2">
+            <CardHeader className="pb-2 pt-10">
+              <CardTitle className={`text-lg flex items-center gap-2 ${!abierto && 'opacity-60'}`}>
                 {esPlanA
                   ? <Crown className="w-5 h-5 text-amber-500" />
                   : <Star className="w-5 h-5 text-slate-400" />
@@ -111,7 +150,7 @@ export function ListaPlanesDisponibles({ planes, onInscribirse }: ListaPlanesDis
               <p className="text-xs text-muted-foreground">Ciclo {plan.anio}</p>
             </CardHeader>
 
-            <CardContent className="pb-2">
+            <CardContent className={`pb-2 ${!abierto && 'opacity-60'}`}>
               <p className={`text-3xl font-bold ${esPlanA ? 'text-amber-600 dark:text-amber-400' : 'text-slate-600 dark:text-slate-300'}`}>
                 ${Number(plan.montoTotal).toLocaleString('es-AR')}
               </p>
@@ -122,14 +161,15 @@ export function ListaPlanesDisponibles({ planes, onInscribirse }: ListaPlanesDis
 
             <CardFooter className="pt-2">
               <Button 
-                className={`w-full transition-colors ${esPlanA 
+                className={`w-full transition-colors ${!abierto ? 'opacity-50 cursor-not-allowed' : (esPlanA 
                   ? 'group-hover:bg-amber-500 group-hover:text-white group-hover:border-amber-500' 
                   : 'group-hover:bg-slate-500 group-hover:text-white group-hover:border-slate-500'
-                }`}
+                )}`}
                 variant="outline"
-                onClick={(e) => { e.stopPropagation(); onInscribirse(plan); }}
+                disabled={!abierto}
+                onClick={(e) => { e.stopPropagation(); if (abierto) onInscribirse(plan); }}
               >
-                Ver detalles
+                {abierto ? 'Ver detalles' : 'Inscripción cerrada'}
               </Button>
             </CardFooter>
           </Card>
@@ -138,3 +178,4 @@ export function ListaPlanesDisponibles({ planes, onInscribirse }: ListaPlanesDis
     </div>
   );
 }
+
