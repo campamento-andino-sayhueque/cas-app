@@ -1,7 +1,7 @@
 import { Link, useRouterState } from "@tanstack/react-router"
 import { useAuth } from "../hooks/useAuth"
 import UserAvatar from "./UserAvatar"
-import { Calendar, CreditCard, FlameKindling, type LucideProps } from "lucide-react"
+import { Calendar, CreditCard, FlameKindling, Backpack, type LucideProps } from "lucide-react"
 import type { ComponentType } from "react"
 
 
@@ -22,6 +22,7 @@ export default function MobileFooter({}: MobileFooterProps){
 
   const navItems: NavItem[] = [
     { name: 'Calendario', to: '/calendario', icon: Calendar },
+    { name: 'Equipo', to: '/equipo', icon: Backpack },
     { name: 'Inicio', to: '/dashboard', icon: FlameKindling, isCenter: true },
     { name: 'Pagos', to: '/pagos', icon: CreditCard },
   ]
