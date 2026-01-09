@@ -11,6 +11,7 @@ import type {
   ReporteProgresoUsuario,
   DetalleProgresoUsuario,
   Criticidad,
+  FotoItemResponse,
 } from '../schemas/equipo';
 
 // ============================================
@@ -35,6 +36,7 @@ export interface CrearItemRequest {
   criticidad?: Criticidad;
   notas?: string;
   evitar?: string;
+  requiereFoto?: boolean;
 }
 
 export interface ActualizarItemRequest {
@@ -45,6 +47,7 @@ export interface ActualizarItemRequest {
   notas?: string;
   evitar?: string;
   orden?: number;
+  requiereFoto?: boolean;
 }
 
 // ============================================
@@ -167,5 +170,52 @@ export const equipoService = {
   getDetalleProgresoUsuario: async (usuarioId: number): Promise<DetalleProgresoUsuario> => {
     const response = await client.get(`/equipo/reportes/usuarios/${usuarioId}`);
     return response.data;
+  },
+
+  // ========================================
+  // Endpoints para fotos
+  // ========================================
+
+  /**
+   * Sube una foto para un item
+   */
+  subirFotoItem: async (itemId: number, file: File): Promise<FotoItemResponse> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await client.post(`/equipo/items/${itemId}/foto`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
+
+  /**
+   * Elimina la foto de un item
+   */
+  eliminarFotoItem: async (itemId: number): Promise<void> => {
+    await client.delete(`/equipo/items/${itemId}/foto`);
+  },
+
+  /**
+   * Obtiene los IDs de los items que tienen foto
+   */
+  getMisItemsConFoto: async (): Promise<number[]> => {
+    const response = await client.get('/equipo/mis-fotos');
+    return response.data;
+  },
+
+  /**
+   * Retorna la URL para previsualizar la foto (thumbnail)
+   */
+  getThumbnailUrl: (itemId: number): string => {
+    return `${import.meta.env.VITE_API_URL}/equipo/items/${itemId}/foto/thumbnail`;
+  },
+
+  /**
+   * Retorna la URL para ver la foto completa
+   */
+  getFotoUrl: (itemId: number): string => {
+    return `${import.meta.env.VITE_API_URL}/equipo/items/${itemId}/foto`;
   },
 };

@@ -8,7 +8,9 @@ import { cn } from '../../lib/utils';
 interface CategoriaAccordionProps {
   categoria: CategoriaEquipo;
   progreso: Record<string, ItemProgreso>;
+  itemIdsConFoto: number[];
   onToggleItem: (itemId: number) => void;
+  onPhotoClick: (item: any) => void;
   itemCargando?: number | null;
   defaultOpen?: boolean;
 }
@@ -19,7 +21,9 @@ interface CategoriaAccordionProps {
 export function CategoriaAccordion({
   categoria,
   progreso,
+  itemIdsConFoto,
   onToggleItem,
+  onPhotoClick,
   itemCargando,
   defaultOpen = false,
 }: CategoriaAccordionProps) {
@@ -123,7 +127,10 @@ export function CategoriaAccordion({
               key={item.id}
               item={item}
               completado={progreso[item.id]?.completado || false}
+              hasFoto={itemIdsConFoto.includes(item.id)}
+              requiereFoto={item.requiereFoto}
               onToggle={() => onToggleItem(item.id)}
+              onPhotoClick={() => onPhotoClick(item)}
               cargando={itemCargando === item.id}
             />
           ))}

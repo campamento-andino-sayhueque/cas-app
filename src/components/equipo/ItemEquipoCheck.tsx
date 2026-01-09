@@ -1,12 +1,16 @@
-import { Check } from 'lucide-react';
+import { Check, Camera } from 'lucide-react';
 import type { ItemEquipo } from '../../api/schemas/equipo';
 import { CRITICIDAD_CONFIG } from '../../api/schemas/equipo';
 import { cn } from '../../lib/utils';
+import { Button } from '../ui/button';
 
 interface ItemEquipoCheckProps {
   item: ItemEquipo;
   completado: boolean;
+  hasFoto?: boolean;
+  requiereFoto?: boolean;
   onToggle: () => void;
+  onPhotoClick?: (e: React.MouseEvent) => void;
   cargando?: boolean;
 }
 
@@ -14,7 +18,15 @@ interface ItemEquipoCheckProps {
  * Componente para un item individual del checklist con checkbox,
  * indicador de criticidad (dot), cantidad y notas.
  */
-export function ItemEquipoCheck({ item, completado, onToggle, cargando }: ItemEquipoCheckProps) {
+export function ItemEquipoCheck({ 
+  item, 
+  completado, 
+  hasFoto,
+  requiereFoto,
+  onToggle, 
+  onPhotoClick, 
+  cargando 
+}: ItemEquipoCheckProps) {
   const criticidadConfig = CRITICIDAD_CONFIG[item.criticidad];
   const esCritico = item.criticidad === 'CRITICO';
   const esImportante = item.criticidad === 'IMPORTANTE';
@@ -103,6 +115,38 @@ export function ItemEquipoCheck({ item, completado, onToggle, cargando }: ItemEq
           </span>
         )}
       </div>
+
+      {/* Botón de Cámara */}
+      {onPhotoClick && (
+        <div className="flex-shrink-0 relative">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className={cn(
+              "h-8 w-8 rounded-full transition-all",
+              hasFoto 
+                ? "text-indigo-600 bg-indigo-50 hover:bg-indigo-100" 
+                : requiereFoto && !completado
+                  ? "text-orange-500 ring-2 ring-orange-300 hover:bg-orange-50"
+                  : "text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+            )}
+            onClick={(e) => {
+              e.stopPropagation();
+              onPhotoClick(e);
+            }}
+            title={requiereFoto ? "Foto requerida" : "Subir foto"}
+          >
+            <Camera className="h-4 w-4" />
+          </Button>
+          {hasFoto && (
+            <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full" />
+          )}
+          {requiereFoto && !hasFoto && !completado && (
+            <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-orange-500 border-2 border-white rounded-full animate-pulse" />
+          )}
+        </div>
+      )}
     </div>
   );
 }

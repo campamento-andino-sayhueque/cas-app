@@ -4,3 +4,4 @@ export { CategoriaAccordion, CategoriaCard } from './CategoriaAccordion';
 export { ItemEquipoCheck, CriticidadDot } from './ItemEquipoCheck';
 export { AdminEquipo } from './AdminEquipo';
 export { ReportesEquipo } from './ReportesEquipo';
+export * from './FotoItemUpload';

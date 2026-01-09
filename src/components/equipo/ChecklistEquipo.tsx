@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { AlertTriangle, RotateCcw, Backpack, Check } from 'lucide-react';
 import { toast } from 'sonner';
 
-import { useCategorias, useMiProgreso, useToggleItem, useResetearChecklist } from '../../hooks/useEquipo';
+import { useCategorias, useMiProgreso, useToggleItem, useResetearChecklist, useMisItemsConFoto } from '../../hooks/useEquipo';
 import { CategoriaAccordion, CategoriaCard } from './CategoriaAccordion';
 import { Button } from '../ui/button';
 import {
@@ -23,7 +23,8 @@ import {
   DialogTitle,
 } from '../ui/dialog';
 import { ItemEquipoCheck } from './ItemEquipoCheck';
-import type { CategoriaEquipo } from '../../api/schemas/equipo';
+import { FotoItemUpload } from './FotoItemUpload';
+import type { CategoriaEquipo, ItemEquipo } from '../../api/schemas/equipo';
 
 /**
  * Componente de progreso circular grande para el header
@@ -75,11 +76,13 @@ function HeaderProgressRing({ progress, size = 80 }: { progress: number; size?: 
 export function ChecklistEquipo() {
   const { categorias, cargando: cargandoCategorias, error: errorCategorias } = useCategorias();
   const { progreso, cargando: cargandoProgreso } = useMiProgreso();
+  const { itemIds: itemIdsConFoto, refetch: refetchFotos } = useMisItemsConFoto();
   const { toggleItem } = useToggleItem();
   const { resetear, cargando: reseteando } = useResetearChecklist();
 
   const [itemCargando, setItemCargando] = useState<number | null>(null);
   const [categoriaSeleccionada, setCategoriaSeleccionada] = useState<CategoriaEquipo | null>(null);
+  const [itemSeleccionadoParaFoto, setItemSeleccionadoParaFoto] = useState<ItemEquipo | null>(null);
 
   // Manejar toggle de item
   const handleToggleItem = async (itemId: number) => {
@@ -219,7 +222,9 @@ export function ChecklistEquipo() {
             key={categoria.id}
             categoria={categoria}
             progreso={progreso?.progreso || {}}
+            itemIdsConFoto={itemIdsConFoto}
             onToggleItem={handleToggleItem}
+            onPhotoClick={(item) => setItemSeleccionadoParaFoto(item)}
             itemCargando={itemCargando}
             defaultOpen={index === 0}
           />
@@ -250,11 +255,32 @@ export function ChecklistEquipo() {
                 key={item.id}
                 item={item}
                 completado={progreso?.progreso[item.id]?.completado || false}
+                hasFoto={itemIdsConFoto.includes(item.id)}
+                requiereFoto={item.requiereFoto}
                 onToggle={() => handleToggleItem(item.id)}
+                onPhotoClick={() => setItemSeleccionadoParaFoto(item)}
                 cargando={itemCargando === item.id}
               />
             ))}
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de subida de foto */}
+      <Dialog open={!!itemSeleccionadoParaFoto} onOpenChange={() => setItemSeleccionadoParaFoto(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Foto del equipo</DialogTitle>
+          </DialogHeader>
+          {itemSeleccionadoParaFoto && (
+            <FotoItemUpload
+              itemId={itemSeleccionadoParaFoto.id}
+              itemName={itemSeleccionadoParaFoto.nombre}
+              hasFoto={itemIdsConFoto.includes(itemSeleccionadoParaFoto.id)}
+              onClose={() => setItemSeleccionadoParaFoto(null)}
+              onSuccess={() => refetchFotos()}
+            />
+          )}
         </DialogContent>
       </Dialog>
 

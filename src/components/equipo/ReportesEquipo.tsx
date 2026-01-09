@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Users, Eye, AlertCircle } from 'lucide-react';
+import { Users, Eye, AlertCircle, Camera } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { toast } from 'sonner';
 
 import {
   useReporteProgreso,
@@ -338,6 +339,15 @@ function DetalleUsuarioModal({
                           {item.cantidad > 1 && <span className="text-gray-500 mr-1">{item.cantidad}x</span>}
                           {item.nombre}
                         </span>
+
+                        {/* Foto (solo si tiene) */}
+                        {item.hasFoto && (
+                          <FotoViewer
+                            usuarioId={usuarioId}
+                            itemId={item.itemId}
+                            itemName={item.nombre}
+                          />
+                        )}
                       </div>
                     ))}
                   </div>
@@ -352,5 +362,69 @@ function DetalleUsuarioModal({
         )}
       </DialogContent>
     </Dialog>
+  );
+}
+
+/**
+ * Componente para visualizar la foto de un item con token
+ */
+function FotoViewer({ usuarioId, itemId, itemName }: { usuarioId: number; itemId: number; itemName: string }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const fetchPhoto = async () => {
+    setLoading(true);
+    try {
+      const { client } = await import('../../api/client');
+      const response = await client.get(`/equipo/admin/usuarios/${usuarioId}/items/${itemId}/foto`, {
+        responseType: 'blob'
+      });
+      const url = URL.createObjectURL(response.data);
+      setPhotoUrl(url);
+    } catch (error) {
+      console.error('Error al cargar foto:', error);
+      toast.error('No se pudo cargar la foto');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleOpen = () => {
+    setIsOpen(true);
+    if (!photoUrl) fetchPhoto();
+  };
+
+  return (
+    <>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="h-8 w-8 p-0 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50"
+        onClick={handleOpen}
+      >
+        <Camera className="h-4 w-4" />
+      </Button>
+
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{itemName}</DialogTitle>
+          </DialogHeader>
+          <div className="aspect-video w-full overflow-hidden rounded-lg bg-gray-100 flex items-center justify-center">
+            {loading ? (
+              <div className="flex flex-col items-center gap-2">
+                <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+                <p className="text-sm text-gray-500">Cargando foto...</p>
+              </div>
+            ) : photoUrl ? (
+              <img src={photoUrl} alt={itemName} className="h-full w-full object-contain" />
+            ) : (
+              <p className="text-gray-500 text-sm">Error al cargar la foto</p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

@@ -1,6 +1,6 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { useAuth } from "../hooks/useAuth";
-import { Wallet, ChevronRight, Settings, Users } from "lucide-react";
+import { Wallet, ChevronRight, Settings, Users, Backpack } from "lucide-react";
 import { FamiliaWidget } from "../components/familia/FamiliaWidget";
 
 export const Route = createFileRoute("/_auth/dashboard")({
@@ -30,6 +30,30 @@ function DashboardComponent() {
       <section className="space-y-3">
         <h2 className="text-lg font-semibold text-muted-foreground">Mi Familia</h2>
         <FamiliaWidget />
+      </section>
+
+      {/* Mi Equipo - visible para todos */}
+      <section className="space-y-3">
+        <h2 className="text-lg font-semibold text-muted-foreground">Mi Equipo</h2>
+        <Link 
+          to="/equipo"
+          className="flex items-center justify-between p-4 border rounded-xl bg-gradient-to-r from-teal-50 to-emerald-50 dark:from-teal-950/30 dark:to-emerald-950/30 border-teal-200 dark:border-teal-800 hover:shadow-md transition-all group"
+        >
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-full bg-teal-100 dark:bg-teal-900 flex items-center justify-center">
+              <Backpack className="w-6 h-6 text-teal-600 dark:text-teal-400" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-teal-900 dark:text-teal-100">
+                Checklist de Equipo
+              </h3>
+              <p className="text-sm text-teal-700 dark:text-teal-300">
+                Preparación para el campamento
+              </p>
+            </div>
+          </div>
+          <ChevronRight className="w-5 h-5 text-teal-400 group-hover:translate-x-1 transition-transform" />
+        </Link>
       </section>
 
       {/* Admin Quick Access */}

@@ -24,11 +24,29 @@ export const equipoKeys = {
   reportes: () => [...equipoKeys.all, 'reportes'] as const,
   reporteProgreso: (grupoId?: string) => [...equipoKeys.reportes(), 'progreso', grupoId] as const,
   detalleUsuario: (usuarioId: number) => [...equipoKeys.reportes(), 'usuario', usuarioId] as const,
+  misFotos: () => [...equipoKeys.all, 'mis-fotos'] as const,
 };
 
 // ============================================
 // Hooks de Lectura (Queries)
 // ============================================
+
+/**
+ * Hook para obtener los IDs de los items que tienen foto
+ */
+export function useMisItemsConFoto() {
+  const query = useQuery({
+    queryKey: equipoKeys.misFotos(),
+    queryFn: () => equipoService.getMisItemsConFoto(),
+  });
+
+  return {
+    itemIds: query.data || [],
+    cargando: query.isLoading,
+    error: query.error,
+    refetch: query.refetch,
+  };
+}
 
 /**
  * Hook para obtener todas las categorías con sus items
@@ -293,6 +311,51 @@ export function useReordenarItems() {
   return {
     reordenarItems: (categoriaId: number, itemIds: number[]) =>
       mutation.mutateAsync({ categoriaId, itemIds }),
+    cargando: mutation.isPending,
+    error: mutation.error,
+  };
+}
+
+// ============================================
+// Hooks de Mutación - Fotos
+// ============================================
+
+/**
+ * Hook para subir una foto de un item
+ */
+export function useSubirFotoItem() {
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: ({ itemId, file }: { itemId: number; file: File }) =>
+      equipoService.subirFotoItem(itemId, file),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: equipoKeys.misFotos() });
+    },
+  });
+
+  return {
+    subirFoto: mutation.mutateAsync,
+    cargando: mutation.isPending,
+    error: mutation.error,
+  };
+}
+
+/**
+ * Hook para eliminar la foto de un item
+ */
+export function useEliminarFotoItem() {
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: (itemId: number) => equipoService.eliminarFotoItem(itemId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: equipoKeys.misFotos() });
+    },
+  });
+
+  return {
+    eliminarFoto: mutation.mutateAsync,
     cargando: mutation.isPending,
     error: mutation.error,
   };

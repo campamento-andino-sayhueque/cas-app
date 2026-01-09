@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Pencil, Trash2, MoreVertical, Package } from 'lucide-react';
+import { Plus, Pencil, Trash2, MoreVertical, Package, Camera } from 'lucide-react';
 import { toast } from 'sonner';
 
 import {
@@ -168,6 +168,11 @@ export function AdminEquipo() {
                     <div className="col-span-3 flex items-center gap-2">
                       <span className={cn('w-2 h-2 rounded-full', CRITICIDAD_CONFIG[item.criticidad].dotColor)} />
                       <span className="text-sm text-gray-600">{CRITICIDAD_CONFIG[item.criticidad].label}</span>
+                      {item.requiereFoto && (
+                        <span className="ml-1 text-indigo-500" title="Requiere foto">
+                          <Camera className="w-3.5 h-3.5" />
+                        </span>
+                      )}
                     </div>
                     <div className="col-span-2 flex justify-end gap-1">
                       <Button
@@ -348,6 +353,7 @@ function ModalItem({
   const [criticidad, setCriticidad] = useState<Criticidad>('NORMAL');
   const [notas, setNotas] = useState('');
   const [evitar, setEvitar] = useState('');
+  const [requiereFoto, setRequiereFoto] = useState(false);
 
   // Poblar datos al editar
   const handleOpenChange = (isOpen: boolean) => {
@@ -357,12 +363,14 @@ function ModalItem({
       setCriticidad(editar.criticidad);
       setNotas(editar.notas || '');
       setEvitar(editar.evitar || '');
+      setRequiereFoto(editar.requiereFoto || false);
     } else if (!isOpen) {
       setNombre('');
       setCantidad(1);
       setCriticidad('NORMAL');
       setNotas('');
       setEvitar('');
+      setRequiereFoto(false);
       onClose();
     }
   };
@@ -375,10 +383,10 @@ function ModalItem({
 
     try {
       if (editar) {
-        await actualizarItem(editar.id, { nombre, cantidad, criticidad, notas, evitar });
+        await actualizarItem(editar.id, { nombre, cantidad, criticidad, notas, evitar, requiereFoto });
         toast.success('Item actualizado');
       } else if (categoriaId) {
-        await crearItem(categoriaId, { nombre, cantidad, criticidad, notas, evitar });
+        await crearItem(categoriaId, { nombre, cantidad, criticidad, notas, evitar, requiereFoto });
         toast.success('Item creado');
       }
       onClose();
@@ -466,6 +474,34 @@ function ModalItem({
               onChange={(e) => setEvitar(e.target.value)}
               placeholder="Ej: algodón, tela"
             />
+          </div>
+
+          {/* Toggle Requiere Foto */}
+          <div className="flex items-center justify-between border rounded-lg p-3 bg-indigo-50/50">
+            <div className="flex items-center gap-2">
+              <Camera className="w-4 h-4 text-indigo-600" />
+              <div>
+                <Label htmlFor="requiereFoto" className="cursor-pointer">Requiere foto</Label>
+                <p className="text-xs text-gray-500">El acampante deberá subir una foto de este item</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={requiereFoto}
+              onClick={() => setRequiereFoto(!requiereFoto)}
+              className={cn(
+                "relative inline-flex h-6 w-11 items-center rounded-full transition-colors",
+                requiereFoto ? "bg-indigo-600" : "bg-gray-200"
+              )}
+            >
+              <span
+                className={cn(
+                  "inline-block h-4 w-4 transform rounded-full bg-white transition-transform",
+                  requiereFoto ? "translate-x-6" : "translate-x-1"
+                )}
+              />
+            </button>
           </div>
         </div>
 

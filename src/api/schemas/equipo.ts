@@ -40,6 +40,7 @@ export const ItemEquipoSchema = object({
   notas: nullable(string()),
   evitar: nullable(string()),
   orden: number(),
+  requiereFoto: boolean(),
 });
 
 export type ItemEquipo = InferOutput<typeof ItemEquipoSchema>;
@@ -115,6 +116,8 @@ export const ItemProgresoDetalleSchema = object({
   criticidad: CriticidadSchema,
   completado: boolean(),
   fechaCompletado: nullable(string()),
+  hasFoto: boolean(),
+  requiereFoto: boolean(),
 });
 
 export type ItemProgresoDetalle = InferOutput<typeof ItemProgresoDetalleSchema>;
@@ -159,6 +162,24 @@ export const DetalleProgresoUsuarioSchema = object({
 });
 
 export type DetalleProgresoUsuario = InferOutput<typeof DetalleProgresoUsuarioSchema>;
+
+// ============================================
+// Schemas de Fotos
+// ============================================
+
+/**
+ * Respuesta al subir una foto o consultar info de foto
+ */
+export const FotoItemResponseSchema = object({
+  id: number(),
+  itemId: number(),
+  ancho: number(),
+  alto: number(),
+  tamanioBytes: number(),
+  fechaSubida: string(),
+});
+
+export type FotoItemResponse = InferOutput<typeof FotoItemResponseSchema>;
 
 // ============================================
 // Helpers de UI - Configuración de Criticidad
