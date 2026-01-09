@@ -32,13 +32,9 @@ interface AsignadorGruposKanbanProps {
 }
 
 // =============================================================================
-// Componente de usuario arrastrable
+// Componente de usuario arrastrable (compacto para el grid)
 // =============================================================================
-interface UsuarioArrastrableProps {
-    usuario: UsuarioAdmin;
-}
-
-function UsuarioArrastrable({ usuario }: UsuarioArrastrableProps) {
+function UsuarioArrastrable({ usuario }: { usuario: UsuarioAdmin }) {
     const {
         attributes,
         listeners,
@@ -63,35 +59,29 @@ function UsuarioArrastrable({ usuario }: UsuarioArrastrableProps) {
             {...attributes}
             {...listeners}
             className={cn(
-                "flex items-center gap-2 p-2 bg-background border rounded-lg shadow-sm cursor-grab active:cursor-grabbing transition-all",
+                "flex items-center gap-1.5 px-2 py-1.5 bg-background border rounded-md shadow-sm cursor-grab active:cursor-grabbing transition-all text-xs",
                 isDragging && "opacity-50 scale-95",
-                "hover:shadow-md hover:border-primary/30"
+                "hover:shadow-md hover:border-primary/40 hover:bg-accent/30"
             )}
         >
-            <GripVertical className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-            <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{usuario.nombreMostrar}</p>
-                <p className="text-xs text-muted-foreground truncate">{usuario.email}</p>
-            </div>
+            <GripVertical className="w-3 h-3 text-muted-foreground flex-shrink-0" />
+            <span className="truncate font-medium">{usuario.nombreMostrar}</span>
         </div>
     );
 }
 
-// Versión simplificada para el drag overlay
+// Versión para el drag overlay
 function UsuarioOverlay({ usuario }: { usuario: UsuarioAdmin }) {
     return (
-        <div className="flex items-center gap-2 p-2 bg-background border-2 border-primary rounded-lg shadow-xl cursor-grabbing">
-            <GripVertical className="w-4 h-4 text-primary flex-shrink-0" />
-            <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{usuario.nombreMostrar}</p>
-                <p className="text-xs text-muted-foreground truncate">{usuario.email}</p>
-            </div>
+        <div className="flex items-center gap-1.5 px-2 py-1.5 bg-background border-2 border-primary rounded-md shadow-xl cursor-grabbing text-xs">
+            <GripVertical className="w-3 h-3 text-primary flex-shrink-0" />
+            <span className="truncate font-medium">{usuario.nombreMostrar}</span>
         </div>
     );
 }
 
 // =============================================================================
-// Columna de grupo (droppable)
+// Columna de grupo (droppable) - Diseño compacto
 // =============================================================================
 interface ColumnaGrupoProps {
     grupo: Grupo | { id: 'sin-asignar'; nombre: string; path: string };
@@ -107,21 +97,21 @@ function ColumnaGrupo({ grupo, usuarios, color, cargando }: ColumnaGrupoProps) {
     });
 
     const colorClasses = {
-        green: 'border-green-200 bg-green-50/30 dark:bg-green-950/20',
-        blue: 'border-blue-200 bg-blue-50/30 dark:bg-blue-950/20',
-        gray: 'border-gray-200 bg-gray-50/30 dark:bg-gray-900/20',
+        green: 'border-green-300 bg-green-50/50 dark:bg-green-950/30',
+        blue: 'border-blue-300 bg-blue-50/50 dark:bg-blue-950/30',
+        gray: 'border-gray-300 bg-gray-50/50 dark:bg-gray-900/30',
     };
 
     const headerColors = {
-        green: 'bg-green-100 dark:bg-green-900/40',
-        blue: 'bg-blue-100 dark:bg-blue-900/40',
-        gray: 'bg-gray-100 dark:bg-gray-800/40',
+        green: 'bg-green-200/70 dark:bg-green-800/50',
+        blue: 'bg-blue-200/70 dark:bg-blue-800/50',
+        gray: 'bg-gray-200/70 dark:bg-gray-700/50',
     };
 
     const iconColors = {
-        green: 'text-green-600 dark:text-green-400',
-        blue: 'text-blue-600 dark:text-blue-400',
-        gray: 'text-gray-600 dark:text-gray-400',
+        green: 'text-green-700 dark:text-green-300',
+        blue: 'text-blue-700 dark:text-blue-300',
+        gray: 'text-gray-700 dark:text-gray-300',
     };
 
     const Icon = grupo.id === 'sin-asignar' ? Users : (color === 'blue' ? Shield : Tent);
@@ -130,30 +120,25 @@ function ColumnaGrupo({ grupo, usuarios, color, cargando }: ColumnaGrupoProps) {
         <div
             ref={setNodeRef}
             className={cn(
-                "flex flex-col w-72 min-w-72 rounded-xl border-2 transition-all duration-200",
+                "flex flex-col rounded-lg border-2 transition-all duration-200 min-h-[200px]",
                 colorClasses[color],
-                isOver && "border-primary ring-2 ring-primary/30 scale-[1.02]"
+                isOver && "border-primary ring-2 ring-primary/40 scale-[1.01] bg-primary/5"
             )}
         >
-            {/* Header */}
-            <div className={cn("p-3 rounded-t-lg", headerColors[color])}>
-                <div className="flex items-center gap-2">
-                    <Icon className={cn("w-5 h-5", iconColors[color])} />
-                    <h3 className="font-semibold text-sm">{grupo.nombre}</h3>
-                    <Badge variant="secondary" className="ml-auto text-xs">
-                        {cargando ? '...' : usuarios.length}
-                    </Badge>
-                </div>
-                {grupo.id !== 'sin-asignar' && (
-                    <p className="text-xs text-muted-foreground mt-1 truncate">{grupo.path}</p>
-                )}
+            {/* Header compacto */}
+            <div className={cn("px-2 py-1.5 rounded-t-md flex items-center gap-1.5", headerColors[color])}>
+                <Icon className={cn("w-4 h-4", iconColors[color])} />
+                <h3 className="font-semibold text-xs truncate flex-1">{grupo.nombre}</h3>
+                <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">
+                    {cargando ? '...' : usuarios.length}
+                </Badge>
             </div>
 
-            {/* Lista de usuarios */}
-            <div className="p-2 flex-1 overflow-y-auto max-h-[60vh] space-y-2">
+            {/* Lista de usuarios - scrollable */}
+            <div className="flex-1 p-1.5 overflow-y-auto space-y-1 max-h-[calc(100vh-350px)] min-h-[100px]">
                 {cargando ? (
                     <div className="flex items-center justify-center py-4">
-                        <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                        <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
                     </div>
                 ) : (
                     <SortableContext
@@ -161,8 +146,8 @@ function ColumnaGrupo({ grupo, usuarios, color, cargando }: ColumnaGrupoProps) {
                         strategy={verticalListSortingStrategy}
                     >
                         {usuarios.length === 0 ? (
-                            <p className="text-xs text-muted-foreground text-center py-4 italic">
-                                Arrastrá usuarios aquí
+                            <p className="text-[10px] text-muted-foreground text-center py-3 italic">
+                                Arrastrá aquí
                             </p>
                         ) : (
                             usuarios.map(usuario => (
@@ -185,15 +170,12 @@ function useGruposConMiembros(grupos: Grupo[]) {
     const query = useQuery({
         queryKey: ['grupos', 'kanban', grupoIds],
         queryFn: async () => {
-            // Retorna un mapa de grupoId -> lista de emails de miembros
             const miembrosPorGrupo: Record<string, string[]> = {};
             
-            // Cargar miembros de cada grupo en paralelo
             await Promise.all(
                 grupos.map(async (grupo) => {
                     try {
                         const miembros = await gruposService.obtenerMiembrosGrupo(grupo.id);
-                        // Usamos email para hacer el match con los usuarios
                         miembrosPorGrupo[grupo.id] = miembros.map(m => m.email.toLowerCase());
                     } catch (error) {
                         console.error(`Error cargando miembros del grupo ${grupo.nombre}:`, error);
@@ -205,7 +187,7 @@ function useGruposConMiembros(grupos: Grupo[]) {
             return miembrosPorGrupo;
         },
         enabled: grupos.length > 0,
-        staleTime: 30000, // 30 segundos
+        staleTime: 30000,
     });
 
     return {
@@ -216,7 +198,7 @@ function useGruposConMiembros(grupos: Grupo[]) {
 }
 
 // =============================================================================
-// Componente principal
+// Componente principal - Layout de grilla de pantalla completa
 // =============================================================================
 export function AsignadorGruposKanban({ tipo }: AsignadorGruposKanbanProps) {
     const queryClient = useQueryClient();
@@ -231,7 +213,6 @@ export function AsignadorGruposKanban({ tipo }: AsignadorGruposKanbanProps) {
 
     const [activeUser, setActiveUser] = useState<UsuarioAdmin | null>(null);
     const [error, setError] = useState<string | null>(null);
-    // Estado local para las asignaciones (por userId)
     const [asignacionesLocales, setAsignacionesLocales] = useState<Record<string, number[]>>({});
     const [initialized, setInitialized] = useState(false);
 
@@ -239,13 +220,11 @@ export function AsignadorGruposKanban({ tipo }: AsignadorGruposKanbanProps) {
     const rolFiltro = tipo === 'acampantes' ? 'ACAMPANTE' : 'DIRIGENTE';
     const color = tipo === 'acampantes' ? 'green' : 'blue';
 
-    // Filtrar usuarios por rol
     const usuariosFiltrados = usuarios.filter(u => u.roles.includes(rolFiltro));
 
-    // Sincronizar miembros cargados con estado local (cuando cargan los datos)
+    // Sincronizar miembros
     useEffect(() => {
         if (Object.keys(emailsPorGrupo).length > 0 && usuariosFiltrados.length > 0 && !initialized) {
-            // Convertir emails a userIds
             const nuevasAsignaciones: Record<string, number[]> = {};
             
             for (const [grupoId, emails] of Object.entries(emailsPorGrupo)) {
@@ -263,21 +242,16 @@ export function AsignadorGruposKanban({ tipo }: AsignadorGruposKanbanProps) {
         }
     }, [emailsPorGrupo, usuariosFiltrados, initialized]);
 
-    // Resetear inicialización si cambia el tipo
     useEffect(() => {
         setInitialized(false);
         setAsignacionesLocales({});
     }, [tipo]);
 
-    // Sensores para drag
     const sensors = useSensors(
-        useSensor(PointerSensor, {
-            activationConstraint: { distance: 8 },
-        }),
+        useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
         useSensor(KeyboardSensor)
     );
 
-    // Esta función determina en qué grupo está un usuario
     const getGrupoDeUsuario = useCallback((usuario: UsuarioAdmin): string => {
         for (const grupoId in asignacionesLocales) {
             if (asignacionesLocales[grupoId].includes(usuario.id)) {
@@ -288,16 +262,11 @@ export function AsignadorGruposKanban({ tipo }: AsignadorGruposKanbanProps) {
     }, [asignacionesLocales]);
 
     const handleDragStart = (event: DragStartEvent) => {
-        const { active } = event;
-        const usuario = (active.data.current as { usuario?: UsuarioAdmin })?.usuario;
-        if (usuario) {
-            setActiveUser(usuario);
-        }
+        const usuario = (event.active.data.current as { usuario?: UsuarioAdmin })?.usuario;
+        if (usuario) setActiveUser(usuario);
     };
 
-    const handleDragOver = (_event: DragOverEvent) => {
-        // Feedback visual manejado por CSS
-    };
+    const handleDragOver = (_event: DragOverEvent) => {};
 
     const handleDragEnd = async (event: DragEndEvent) => {
         const { active, over } = event;
@@ -315,64 +284,39 @@ export function AsignadorGruposKanban({ tipo }: AsignadorGruposKanbanProps) {
         const nuevoGrupoId = grupoData.grupo.id;
         const grupoActualId = getGrupoDeUsuario(usuario);
 
-        // Si está en el mismo grupo, no hacer nada
         if (grupoActualId === nuevoGrupoId) return;
 
-        // Guardar estado anterior para revert
         const estadoAnterior = { ...asignacionesLocales };
 
         // Optimistic update
         setAsignacionesLocales(prev => {
             const newState = { ...prev };
-            
-            // Remover del grupo anterior
             if (grupoActualId !== 'sin-asignar' && newState[grupoActualId]) {
                 newState[grupoActualId] = newState[grupoActualId].filter(id => id !== usuario.id);
             }
-            
-            // Agregar al nuevo grupo
             if (nuevoGrupoId !== 'sin-asignar') {
-                if (!newState[nuevoGrupoId]) {
-                    newState[nuevoGrupoId] = [];
-                }
+                if (!newState[nuevoGrupoId]) newState[nuevoGrupoId] = [];
                 newState[nuevoGrupoId] = [...newState[nuevoGrupoId], usuario.id];
             }
-            
             return newState;
         });
 
         try {
-            // Si estaba en un grupo, removerlo
             if (grupoActualId !== 'sin-asignar') {
-                await removerMutation.mutateAsync({
-                    usuarioId: usuario.id,
-                    grupoId: grupoActualId,
-                });
+                await removerMutation.mutateAsync({ usuarioId: usuario.id, grupoId: grupoActualId });
             }
-
-            // Si el destino no es "sin asignar", agregarlo al nuevo grupo
             if (nuevoGrupoId !== 'sin-asignar') {
-                await agregarMutation.mutateAsync({
-                    usuarioId: usuario.id,
-                    grupoId: nuevoGrupoId,
-                });
+                await agregarMutation.mutateAsync({ usuarioId: usuario.id, grupoId: nuevoGrupoId });
             }
-
-            // Invalidar queries para refrescar datos
             queryClient.invalidateQueries({ queryKey: ['grupos', 'kanban'] });
-
         } catch (err) {
             console.error('Error al asignar usuario:', err);
-            
-            // Revertir optimistic update
             setAsignacionesLocales(estadoAnterior);
-
-            // Manejar error 403
-            const errorMessage = err instanceof Error ? err.message : 'Error desconocido';
+            const errorMessage = err instanceof Error ? err.message : '';
             if (errorMessage.includes('403') || errorMessage.includes('Forbidden')) {
-                setError('No tenés permisos para asignar usuarios a grupos. Solo miembros del Consejo pueden hacerlo.');
+                setError('No tenés permisos. Solo miembros del Consejo pueden asignar.');
             } else {
-                setError('Error al asignar usuario. Intentá nuevamente.');
+                setError('Error al asignar. Intentá nuevamente.');
             }
         }
     };
@@ -384,45 +328,56 @@ export function AsignadorGruposKanban({ tipo }: AsignadorGruposKanbanProps) {
 
     if (cargando) {
         return (
-            <div className="flex items-center justify-center p-12">
+            <div className="flex items-center justify-center h-[60vh]">
                 <Loader2 className="w-8 h-8 animate-spin text-primary" />
             </div>
         );
     }
 
-    // Separar usuarios por grupo
     const usuariosSinAsignar = usuariosFiltrados.filter(u => getGrupoDeUsuario(u) === 'sin-asignar');
     const getUsuariosDeGrupo = (grupoId: string) => 
         usuariosFiltrados.filter(u => getGrupoDeUsuario(u) === grupoId);
 
+    // Calcular número de columnas basado en cantidad de grupos
+    const totalColumnas = grupos.length + 1; // +1 para "Sin Asignar"
+    const gridCols = totalColumnas <= 3 ? 'grid-cols-1 md:grid-cols-3' 
+                   : totalColumnas <= 4 ? 'grid-cols-2 md:grid-cols-4'
+                   : totalColumnas <= 6 ? 'grid-cols-2 md:grid-cols-3 lg:grid-cols-6'
+                   : 'grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8';
+
     return (
-        <div className="space-y-4">
+        <div className="h-full flex flex-col gap-3">
+            {/* Header con instrucciones y refresh */}
+            <div className="flex items-center justify-between gap-3 flex-shrink-0">
+                <div className="text-xs text-muted-foreground bg-muted/40 px-3 py-2 rounded-md flex-1">
+                    <strong>Arrastrá</strong> usuarios entre columnas. Solo <strong>Consejo</strong> puede modificar.
+                </div>
+                <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="text-xs">
+                        {usuariosFiltrados.length} usuarios
+                    </Badge>
+                    <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={handleRefresh}
+                        disabled={cargandoMiembros}
+                        className="h-7 text-xs"
+                    >
+                        <RefreshCw className={cn("w-3 h-3 mr-1", cargandoMiembros && "animate-spin")} />
+                        Actualizar
+                    </Button>
+                </div>
+            </div>
+
             {/* Mensaje de error */}
             {error && (
-                <Alert variant="destructive">
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertDescription>{error}</AlertDescription>
+                <Alert variant="destructive" className="py-2">
+                    <AlertCircle className="h-3 w-3" />
+                    <AlertDescription className="text-xs">{error}</AlertDescription>
                 </Alert>
             )}
 
-            {/* Header con instrucciones y refresh */}
-            <div className="flex items-center justify-between gap-4">
-                <div className="text-sm text-muted-foreground bg-muted/30 p-3 rounded-lg flex-1">
-                    <strong>Instrucciones:</strong> Arrastrá los usuarios a las columnas de grupos para asignarlos. 
-                    Solo miembros del <strong>Consejo</strong> pueden realizar esta acción.
-                </div>
-                <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={handleRefresh}
-                    disabled={cargandoMiembros}
-                >
-                    <RefreshCw className={cn("w-4 h-4 mr-2", cargandoMiembros && "animate-spin")} />
-                    Actualizar
-                </Button>
-            </div>
-
-            {/* Área de Kanban */}
+            {/* Grid de Kanban - ocupa todo el espacio disponible */}
             <DndContext
                 sensors={sensors}
                 collisionDetection={closestCorners}
@@ -430,8 +385,8 @@ export function AsignadorGruposKanban({ tipo }: AsignadorGruposKanbanProps) {
                 onDragOver={handleDragOver}
                 onDragEnd={handleDragEnd}
             >
-                <div className="flex gap-4 overflow-x-auto pb-4">
-                    {/* Columna "Sin Asignar" */}
+                <div className={cn("grid gap-3 flex-1 auto-rows-fr", gridCols)}>
+                    {/* Columna "Sin Asignar" primero */}
                     <ColumnaGrupo
                         grupo={{ id: 'sin-asignar', nombre: 'Sin Asignar', path: '' }}
                         usuarios={usuariosSinAsignar}
@@ -451,7 +406,6 @@ export function AsignadorGruposKanban({ tipo }: AsignadorGruposKanbanProps) {
                     ))}
                 </div>
 
-                {/* Overlay del usuario arrastrado */}
                 <DragOverlay>
                     {activeUser && <UsuarioOverlay usuario={activeUser} />}
                 </DragOverlay>
@@ -459,9 +413,9 @@ export function AsignadorGruposKanban({ tipo }: AsignadorGruposKanbanProps) {
 
             {/* Estado de mutaciones */}
             {(agregarMutation.isPending || removerMutation.isPending) && (
-                <div className="fixed bottom-4 right-4 bg-primary text-primary-foreground px-4 py-2 rounded-lg shadow-lg flex items-center gap-2">
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Actualizando...
+                <div className="fixed bottom-4 right-4 bg-primary text-primary-foreground px-3 py-1.5 rounded-md shadow-lg flex items-center gap-2 text-sm">
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                    Guardando...
                 </div>
             )}
         </div>
