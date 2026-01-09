@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus, Pencil, Trash2, MoreVertical, Package, Camera } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -355,22 +355,28 @@ function ModalItem({
   const [evitar, setEvitar] = useState('');
   const [requiereFoto, setRequiereFoto] = useState(false);
 
-  // Poblar datos al editar
-  const handleOpenChange = (isOpen: boolean) => {
-    if (isOpen && editar) {
+  // Poblar datos cuando se abre para editar
+  useEffect(() => {
+    if (open && editar) {
       setNombre(editar.nombre);
       setCantidad(editar.cantidad);
       setCriticidad(editar.criticidad);
       setNotas(editar.notas || '');
       setEvitar(editar.evitar || '');
       setRequiereFoto(editar.requiereFoto || false);
-    } else if (!isOpen) {
+    } else if (open && !editar) {
+      // Reset para crear nuevo
       setNombre('');
       setCantidad(1);
       setCriticidad('NORMAL');
       setNotas('');
       setEvitar('');
       setRequiereFoto(false);
+    }
+  }, [open, editar]);
+
+  const handleOpenChange = (isOpen: boolean) => {
+    if (!isOpen) {
       onClose();
     }
   };

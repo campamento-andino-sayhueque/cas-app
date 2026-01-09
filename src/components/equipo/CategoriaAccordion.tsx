@@ -130,7 +130,7 @@ export function CategoriaAccordion({
               hasFoto={itemIdsConFoto.includes(item.id)}
               requiereFoto={item.requiereFoto}
               onToggle={() => onToggleItem(item.id)}
-              onPhotoClick={() => onPhotoClick(item)}
+              onPhotoClick={item.requiereFoto ? () => onPhotoClick(item) : undefined}
               cargando={itemCargando === item.id}
             />
           ))}

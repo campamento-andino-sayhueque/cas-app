@@ -258,7 +258,7 @@ export function ChecklistEquipo() {
                 hasFoto={itemIdsConFoto.includes(item.id)}
                 requiereFoto={item.requiereFoto}
                 onToggle={() => handleToggleItem(item.id)}
-                onPhotoClick={() => setItemSeleccionadoParaFoto(item)}
+                onPhotoClick={item.requiereFoto ? () => setItemSeleccionadoParaFoto(item) : undefined}
                 cargando={itemCargando === item.id}
               />
             ))}
