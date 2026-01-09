@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
-import { TablaUsuarios, DetalleUsuario } from '../components/usuarios';
+import { TablaUsuarios, DetalleUsuario, AsignadorGruposKanban } from '../components/usuarios';
 import { useUsuariosAdmin } from '../hooks/useUsuariosAdmin';
 import { useGruposAcampantes, useGruposDirigentes } from '../hooks/useGrupos';
 import type { UsuarioAdmin } from '../api/services/usuariosAdmin';
-import { Users, Tent, Shield, ChevronRight } from 'lucide-react';
+import { Users, Tent, Shield, ChevronRight, Kanban } from 'lucide-react';
 import { Badge } from '../components/ui/badge';
 
 export const Route = createFileRoute('/_auth/usuarios')({
@@ -39,7 +39,7 @@ function AcampantesPage() {
 
             {/* Main content with tabs */}
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-                <TabsList className="grid w-full max-w-md grid-cols-2">
+                <TabsList className="grid w-full max-w-lg grid-cols-3">
                     <TabsTrigger value="acampantes" className="flex items-center gap-2">
                         <Users className="w-4 h-4" />
                         <span className="hidden sm:inline">Acampantes</span>
@@ -47,6 +47,10 @@ function AcampantesPage() {
                     <TabsTrigger value="grupos" className="flex items-center gap-2">
                         <Tent className="w-4 h-4" />
                         <span className="hidden sm:inline">Grupos</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="asignar" className="flex items-center gap-2">
+                        <Kanban className="w-4 h-4" />
+                        <span className="hidden sm:inline">Asignar</span>
                     </TabsTrigger>
                 </TabsList>
 
@@ -131,6 +135,33 @@ function AcampantesPage() {
                                 {gruposDirigentes.length} grupos de dirigentes
                             </Badge>
                         </div>
+                    </div>
+                </TabsContent>
+
+                {/* Asignar Tab - Kanban Drag & Drop */}
+                <TabsContent value="asignar" className="space-y-6">
+                    <div className="space-y-6">
+                        {/* Selector de tipo */}
+                        <Tabs defaultValue="acampantes" className="w-full">
+                            <TabsList className="mb-4">
+                                <TabsTrigger value="acampantes" className="flex items-center gap-2">
+                                    <Tent className="w-4 h-4" />
+                                    Acampantes
+                                </TabsTrigger>
+                                <TabsTrigger value="dirigentes" className="flex items-center gap-2">
+                                    <Shield className="w-4 h-4" />
+                                    Dirigentes
+                                </TabsTrigger>
+                            </TabsList>
+                            
+                            <TabsContent value="acampantes">
+                                <AsignadorGruposKanban tipo="acampantes" />
+                            </TabsContent>
+                            
+                            <TabsContent value="dirigentes">
+                                <AsignadorGruposKanban tipo="dirigentes" />
+                            </TabsContent>
+                        </Tabs>
                     </div>
                 </TabsContent>
             </Tabs>

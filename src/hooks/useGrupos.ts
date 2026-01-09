@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { gruposService } from "../api/services/grupos";
+import { gruposService, type MiembroGrupo } from "../api/services/grupos";
 
 /**
  * Hook para obtener grupos de acampantes.
@@ -51,6 +51,24 @@ export function useGruposUsuario(usuarioId: number, enabled = true) {
 }
 
 /**
+ * Hook para obtener los miembros de un grupo.
+ */
+export function useMiembrosGrupo(grupoId: string, enabled = true) {
+    const query = useQuery({
+        queryKey: ['grupos', grupoId, 'miembros'],
+        queryFn: () => gruposService.obtenerMiembrosGrupo(grupoId),
+        enabled: enabled && !!grupoId,
+    });
+
+    return {
+        miembros: query.data ?? [],
+        cargando: query.isLoading,
+        error: query.error,
+        refetch: query.refetch,
+    };
+}
+
+/**
  * Hook para agregar un usuario a un grupo.
  */
 export function useAgregarAGrupo() {
@@ -59,8 +77,10 @@ export function useAgregarAGrupo() {
     return useMutation({
         mutationFn: ({ usuarioId, grupoId }: { usuarioId: number; grupoId: string }) =>
             gruposService.agregarUsuarioAGrupo(usuarioId, grupoId),
-        onSuccess: (_, { usuarioId }) => {
+        onSuccess: (_, { usuarioId, grupoId }) => {
             queryClient.invalidateQueries({ queryKey: ['usuarios', usuarioId, 'grupos'] });
+            queryClient.invalidateQueries({ queryKey: ['grupos', grupoId, 'miembros'] });
+            queryClient.invalidateQueries({ queryKey: ['grupos', 'kanban'] });
         },
     });
 }
@@ -74,8 +94,10 @@ export function useRemoverDeGrupo() {
     return useMutation({
         mutationFn: ({ usuarioId, grupoId }: { usuarioId: number; grupoId: string }) =>
             gruposService.removerUsuarioDeGrupo(usuarioId, grupoId),
-        onSuccess: (_, { usuarioId }) => {
+        onSuccess: (_, { usuarioId, grupoId }) => {
             queryClient.invalidateQueries({ queryKey: ['usuarios', usuarioId, 'grupos'] });
+            queryClient.invalidateQueries({ queryKey: ['grupos', grupoId, 'miembros'] });
+            queryClient.invalidateQueries({ queryKey: ['grupos', 'kanban'] });
         },
     });
 }
@@ -93,3 +115,5 @@ export function useCrearGrupoAcampantes() {
         },
     });
 }
+
+export type { MiembroGrupo };

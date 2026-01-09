@@ -72,4 +72,19 @@ export const gruposService = {
     removerUsuarioDeGrupo: async (usuarioId: number, grupoId: string): Promise<void> => {
         await client.delete(`/usuarios/${usuarioId}/grupos/${grupoId}`);
     },
+
+    /**
+     * Obtiene los miembros de un grupo.
+     */
+    obtenerMiembrosGrupo: async (grupoId: string): Promise<MiembroGrupo[]> => {
+        const response = await client.get(`/grupos/${grupoId}/miembros`);
+        return response.data;
+    },
 };
+
+// Types adicionales
+export interface MiembroGrupo {
+    keycloakId: string;
+    email: string;
+    nombreMostrar: string;
+}
