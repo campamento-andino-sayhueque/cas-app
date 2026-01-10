@@ -93,7 +93,7 @@ jobs:
 
       - name: Deploy to Development
         env:
-          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_CAS_WEB_465521 }}
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_AUTHZEN }}
         run: |
           printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > /tmp/sa.json
           export GOOGLE_APPLICATION_CREDENTIALS=/tmp/sa.json
