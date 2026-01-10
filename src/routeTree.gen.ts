@@ -19,6 +19,7 @@ import { Route as AuthPerfilRouteImport } from './routes/_auth.perfil'
 import { Route as AuthPagosRouteImport } from './routes/_auth.pagos'
 import { Route as AuthOnboardingRouteImport } from './routes/_auth.onboarding'
 import { Route as AuthEquipoRouteImport } from './routes/_auth.equipo'
+import { Route as AuthDocumentosRouteImport } from './routes/_auth.documentos'
 import { Route as AuthDefinicionPlanesRouteImport } from './routes/_auth.definicion-planes'
 import { Route as AuthDashboardRouteImport } from './routes/_auth.dashboard'
 import { Route as AuthCalendarioRouteImport } from './routes/_auth.calendario'
@@ -72,6 +73,11 @@ const AuthEquipoRoute = AuthEquipoRouteImport.update({
   path: '/equipo',
   getParentRoute: () => AuthRoute,
 } as any)
+const AuthDocumentosRoute = AuthDocumentosRouteImport.update({
+  id: '/documentos',
+  path: '/documentos',
+  getParentRoute: () => AuthRoute,
+} as any)
 const AuthDefinicionPlanesRoute = AuthDefinicionPlanesRouteImport.update({
   id: '/definicion-planes',
   path: '/definicion-planes',
@@ -94,6 +100,7 @@ export interface FileRoutesByFullPath {
   '/calendario': typeof AuthCalendarioRoute
   '/dashboard': typeof AuthDashboardRoute
   '/definicion-planes': typeof AuthDefinicionPlanesRoute
+  '/documentos': typeof AuthDocumentosRoute
   '/equipo': typeof AuthEquipoRoute
   '/onboarding': typeof AuthOnboardingRoute
   '/pagos': typeof AuthPagosRoute
@@ -108,6 +115,7 @@ export interface FileRoutesByTo {
   '/calendario': typeof AuthCalendarioRoute
   '/dashboard': typeof AuthDashboardRoute
   '/definicion-planes': typeof AuthDefinicionPlanesRoute
+  '/documentos': typeof AuthDocumentosRoute
   '/equipo': typeof AuthEquipoRoute
   '/onboarding': typeof AuthOnboardingRoute
   '/pagos': typeof AuthPagosRoute
@@ -124,6 +132,7 @@ export interface FileRoutesById {
   '/_auth/calendario': typeof AuthCalendarioRoute
   '/_auth/dashboard': typeof AuthDashboardRoute
   '/_auth/definicion-planes': typeof AuthDefinicionPlanesRoute
+  '/_auth/documentos': typeof AuthDocumentosRoute
   '/_auth/equipo': typeof AuthEquipoRoute
   '/_auth/onboarding': typeof AuthOnboardingRoute
   '/_auth/pagos': typeof AuthPagosRoute
@@ -140,6 +149,7 @@ export interface FileRouteTypes {
     | '/calendario'
     | '/dashboard'
     | '/definicion-planes'
+    | '/documentos'
     | '/equipo'
     | '/onboarding'
     | '/pagos'
@@ -154,6 +164,7 @@ export interface FileRouteTypes {
     | '/calendario'
     | '/dashboard'
     | '/definicion-planes'
+    | '/documentos'
     | '/equipo'
     | '/onboarding'
     | '/pagos'
@@ -169,6 +180,7 @@ export interface FileRouteTypes {
     | '/_auth/calendario'
     | '/_auth/dashboard'
     | '/_auth/definicion-planes'
+    | '/_auth/documentos'
     | '/_auth/equipo'
     | '/_auth/onboarding'
     | '/_auth/pagos'
@@ -256,6 +268,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthEquipoRouteImport
       parentRoute: typeof AuthRoute
     }
+    '/_auth/documentos': {
+      id: '/_auth/documentos'
+      path: '/documentos'
+      fullPath: '/documentos'
+      preLoaderRoute: typeof AuthDocumentosRouteImport
+      parentRoute: typeof AuthRoute
+    }
     '/_auth/definicion-planes': {
       id: '/_auth/definicion-planes'
       path: '/definicion-planes'
@@ -284,6 +303,7 @@ interface AuthRouteChildren {
   AuthCalendarioRoute: typeof AuthCalendarioRoute
   AuthDashboardRoute: typeof AuthDashboardRoute
   AuthDefinicionPlanesRoute: typeof AuthDefinicionPlanesRoute
+  AuthDocumentosRoute: typeof AuthDocumentosRoute
   AuthEquipoRoute: typeof AuthEquipoRoute
   AuthOnboardingRoute: typeof AuthOnboardingRoute
   AuthPagosRoute: typeof AuthPagosRoute
@@ -297,6 +317,7 @@ const AuthRouteChildren: AuthRouteChildren = {
   AuthCalendarioRoute: AuthCalendarioRoute,
   AuthDashboardRoute: AuthDashboardRoute,
   AuthDefinicionPlanesRoute: AuthDefinicionPlanesRoute,
+  AuthDocumentosRoute: AuthDocumentosRoute,
   AuthEquipoRoute: AuthEquipoRoute,
   AuthOnboardingRoute: AuthOnboardingRoute,
   AuthPagosRoute: AuthPagosRoute,
