@@ -8,6 +8,7 @@
 import { useState } from 'react';
 import { X, FileText, Check, Clock, AlertCircle, Upload, ChevronDown, ChevronUp, Eye, Loader2 } from 'lucide-react';
 import { useDetalleDocumentosUsuario, useTipoDocumento, useMarcarEntregaFisica } from '../../hooks/useDocumentos';
+import { documentosService } from '../../api/services/documentos';
 import { ESTADO_CONFIG, type DocumentoCompletado, type ArchivoAdjunto } from '../../api/schemas/documentos';
 
 interface DetalleDocumentosUsuarioProps {
@@ -258,6 +259,26 @@ function AdjuntosSection({ adjuntos }: AdjuntosSectionProps) {
     }
   };
 
+  const handleVerArchivo = async (archivoId: number, nombreArchivo: string) => {
+    try {
+      // Descargar archivo con autenticación
+      const blob = await documentosService.descargarAdjunto(archivoId);
+      // Crear URL temporal y abrir en nueva pestaña
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.target = '_blank';
+      link.download = nombreArchivo;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      // Limpiar URL después de un tiempo
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (error) {
+      console.error('Error al descargar archivo:', error);
+    }
+  };
+
   return (
     <div>
       <h5 className="text-sm font-semibold text-gray-700 mb-2">Archivos adjuntos</h5>
@@ -294,6 +315,7 @@ function AdjuntosSection({ adjuntos }: AdjuntosSectionProps) {
                 )
               )}
               <button
+                onClick={() => handleVerArchivo(adjunto.id, adjunto.nombreArchivo)}
                 className="p-1 text-gray-400 hover:text-blue-500 transition-colors"
                 title="Ver archivo"
               >
