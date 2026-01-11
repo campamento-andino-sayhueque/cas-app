@@ -5,7 +5,7 @@
  * Permite ver el estado de cada documento y acceder a completarlo.
  */
 
-import { FileText, Check, Clock, AlertCircle, ChevronRight, Upload } from 'lucide-react';
+import { FileText, Check, Clock, AlertCircle, ChevronRight, Upload, AlertTriangle } from 'lucide-react';
 import { useDocumentosUsuario } from '../../hooks/useDocumentos';
 import { useUsuarioActual } from '../../hooks/useUsuarioActual';
 import { ESTADO_CONFIG, type DocumentoCompletado } from '../../api/schemas/documentos';
@@ -92,6 +92,43 @@ export function MisDocumentos({ onSelectDocumento }: MisDocumentosProps) {
           </div>
         </div>
       </div>
+
+      {/* Pendientes de entrega física */}
+      {documentos.some(d => d.estado === 'PENDIENTE_FISICO') && (
+        <div className="bg-orange-50 border border-orange-200 rounded-xl overflow-hidden">
+          <div className="px-4 py-3 bg-orange-100 border-b border-orange-200 flex items-center gap-2">
+            <AlertTriangle className="w-5 h-5 text-orange-600" />
+            <h3 className="font-semibold text-orange-900">Pendiente de Entrega Física</h3>
+          </div>
+          <div className="p-2 space-y-1">
+            {documentos
+              .filter(d => d.estado === 'PENDIENTE_FISICO')
+              .flatMap(d => d.archivosAdjuntos
+                .filter(a => a.requiereEntregaFisica && !a.entregadoFisicamente)
+                .map(a => ({ ...a, docNombre: d.tipoDocumentoNombre, docId: d.tipoDocumentoId }))
+              )
+              .map((item) => (
+                <div key={item.id} className="flex items-center justify-between p-3 bg-white rounded-lg border border-orange-100">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-orange-50 rounded-lg">
+                      <FileText className="w-4 h-4 text-orange-600" />
+                    </div>
+                    <div>
+                      <div className="text-sm font-medium text-gray-900">{item.adjuntoNombre}</div>
+                      <div className="text-xs text-gray-500">{item.docNombre}</div>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => onSelectDocumento?.(item.docId, usuario.id)}
+                    className="text-xs font-medium text-orange-600 hover:text-orange-700 bg-orange-50 hover:bg-orange-100 px-3 py-1.5 rounded-lg transition-colors"
+                  >
+                    Ver detalles
+                  </button>
+                </div>
+              ))}
+          </div>
+        </div>
+      )}
 
       {/* Lista de documentos */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">

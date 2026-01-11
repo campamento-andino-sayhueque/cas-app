@@ -6,7 +6,7 @@
  */
 
 import { useState, useEffect, useMemo } from 'react';
-import { X, Save, Check, Upload, ChevronLeft, AlertCircle, Loader2 } from 'lucide-react';
+import { X, Save, Check, Upload, ChevronLeft, AlertCircle, Loader2, Clock } from 'lucide-react';
 import { useDocumento, useTipoDocumento, useGuardarDocumento, useSubirAdjunto } from '../../hooks/useDocumentos';
 import type { CampoFormulario, AdjuntoRequerido, ArchivoAdjunto } from '../../api/schemas/documentos';
 
@@ -454,19 +454,37 @@ function AdjuntoInput({ adjunto, archivoSubido, archivoSeleccionado, onSelectFil
             <p className="text-sm text-gray-500 mt-1">{adjunto.descripcion}</p>
           )}
           {adjunto.requiereEntregaFisica && (
-            <p className="text-xs text-orange-600 mt-1 flex items-center gap-1">
-              <AlertCircle className="w-3 h-3" />
-              Requiere entrega física
-            </p>
+            <div className="flex flex-col gap-1 mt-1">
+              <p className="text-xs text-orange-600 flex items-center gap-1">
+                <AlertCircle className="w-3 h-3" />
+                Requiere entrega física del original
+              </p>
+              {archivoSubido && (
+                <p className={`text-xs flex items-center gap-1 ${archivoSubido.entregadoFisicamente ? 'text-green-600' : 'text-orange-500 font-medium'}`}>
+                  {archivoSubido.entregadoFisicamente ? (
+                    <><Check className="w-3 h-3" /> Entregado físicamente</>
+                  ) : (
+                    <><Clock className="w-3 h-3" /> Pendiente de entrega física</>
+                  )}
+                </p>
+              )}
+            </div>
           )}
         </div>
         <div className="flex items-center gap-2">
           {tieneArchivo ? (
-            <div className="flex items-center gap-2 text-green-600">
-              <Check className="w-5 h-5" />
-              <span className="text-sm">
-                {archivoSubido ? 'Subido' : archivoSeleccionado?.name}
-              </span>
+            <div className="flex flex-col items-end gap-1">
+              <div className="flex items-center gap-2 text-green-600">
+                <Check className="w-5 h-5" />
+                <span className="text-sm font-medium">
+                  {archivoSubido ? 'Subido (Digital)' : 'Seleccionado'}
+                </span>
+              </div>
+              {archivoSubido && (
+                <span className="text-[10px] text-gray-500">
+                  {archivoSubido.nombreArchivo}
+                </span>
+              )}
             </div>
           ) : (
             <label className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 cursor-pointer transition-colors">
