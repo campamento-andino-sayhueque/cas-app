@@ -1,0 +1,178 @@
+/**
+ * Servicios API para el módulo de Documentación
+ */
+
+import { client } from '../client';
+import type {
+  TipoDocumento,
+  DocumentoCompletado,
+  ArchivoAdjunto,
+  ResumenDocumentosMiembro,
+  ReporteDocumentos,
+  GuardarDocumentoRequest,
+  CrearTipoDocumentoRequest,
+} from '../schemas/documentos';
+
+// ============================================
+// Servicio de Documentos
+// ============================================
+
+export const documentosService = {
+  // ========================================
+  // Tipos de Documento
+  // ========================================
+
+  /**
+   * Obtiene todos los tipos de documento activos
+   */
+  getTiposDocumento: async (): Promise<TipoDocumento[]> => {
+    const response = await client.get('/tipos-documento');
+    return response.data;
+  },
+
+  /**
+   * Obtiene un tipo de documento por ID
+   */
+  getTipoDocumento: async (id: number): Promise<TipoDocumento> => {
+    const response = await client.get(`/tipos-documento/${id}`);
+    return response.data;
+  },
+
+  /**
+   * Obtiene un tipo de documento por código
+   */
+  getTipoDocumentoByCodigo: async (codigo: string): Promise<TipoDocumento> => {
+    const response = await client.get(`/tipos-documento/codigo/${codigo}`);
+    return response.data;
+  },
+
+  /**
+   * Crea un nuevo tipo de documento (solo admin)
+   */
+  crearTipoDocumento: async (request: CrearTipoDocumentoRequest): Promise<TipoDocumento> => {
+    const response = await client.post('/tipos-documento', request);
+    return response.data;
+  },
+
+  /**
+   * Actualiza un tipo de documento existente (solo admin)
+   */
+  actualizarTipoDocumento: async (id: number, request: CrearTipoDocumentoRequest): Promise<TipoDocumento> => {
+    const response = await client.put(`/tipos-documento/${id}`, request);
+    return response.data;
+  },
+
+  /**
+   * Desactiva un tipo de documento (solo admin)
+   */
+  desactivarTipoDocumento: async (id: number): Promise<void> => {
+    await client.delete(`/tipos-documento/${id}`);
+  },
+
+  // ========================================
+  // Documentos de Usuario
+  // ========================================
+
+  /**
+   * Obtiene el resumen de documentos de una familia
+   */
+  getResumenFamilia: async (familiaId: number): Promise<ResumenDocumentosMiembro[]> => {
+    const response = await client.get(`/documentos/familia/${familiaId}`);
+    return response.data;
+  },
+
+  /**
+   * Obtiene todos los documentos de un usuario
+   */
+  getDocumentosUsuario: async (usuarioId: number): Promise<DocumentoCompletado[]> => {
+    const response = await client.get(`/documentos/usuario/${usuarioId}`);
+    return response.data;
+  },
+
+  /**
+   * Obtiene un documento específico de un usuario
+   */
+  getDocumento: async (tipoDocumentoId: number, usuarioId: number): Promise<DocumentoCompletado> => {
+    const response = await client.get(`/documentos/tipo/${tipoDocumentoId}/usuario/${usuarioId}`);
+    return response.data;
+  },
+
+  /**
+   * Guarda o actualiza un documento
+   */
+  guardarDocumento: async (request: GuardarDocumentoRequest): Promise<DocumentoCompletado> => {
+    const response = await client.post('/documentos', request);
+    return response.data;
+  },
+
+  /**
+   * Sube un archivo adjunto
+   */
+  subirAdjunto: async (documentoId: number, adjuntoRequeridoId: number, file: File): Promise<ArchivoAdjunto> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await client.post(
+      `/documentos/${documentoId}/adjuntos/${adjuntoRequeridoId}`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
+    return response.data;
+  },
+
+  /**
+   * Marca un adjunto como entregado físicamente (solo admin/secretario)
+   */
+  marcarEntregaFisica: async (archivoId: number): Promise<void> => {
+    await client.post(`/documentos/adjuntos/${archivoId}/entrega-fisica`);
+  },
+
+  /**
+   * Genera la URL para descargar un archivo adjunto
+   */
+  getUrlDescargaAdjunto: (archivoId: number): string => {
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
+    return `${baseUrl}/documentos/adjuntos/${archivoId}/descargar`;
+  },
+
+  /**
+   * Descarga un archivo adjunto como Blob
+   */
+  descargarAdjunto: async (archivoId: number): Promise<Blob> => {
+    const response = await client.get(`/documentos/adjuntos/${archivoId}/descargar`, {
+      responseType: 'blob',
+    });
+    return response.data;
+  },
+
+  // ========================================
+  // Reportes (Dirigentes/Secretario)
+  // ========================================
+
+  /**
+   * Obtiene el reporte de documentación para un grupo
+   */
+  getReporteGrupo: async (grupoId: string): Promise<ReporteDocumentos> => {
+    const response = await client.get(`/documentos/reportes/grupo/${grupoId}`);
+    return response.data;
+  },
+
+  /**
+   * Obtiene el reporte general de documentación (secretario)
+   */
+  getReporteGeneral: async (): Promise<ReporteDocumentos> => {
+    const response = await client.get('/documentos/reportes/general');
+    return response.data;
+  },
+
+  /**
+   * Obtiene el detalle de documentos de un usuario específico
+   */
+  getDetalleDocumentosUsuario: async (usuarioId: number): Promise<DocumentoCompletado[]> => {
+    const response = await client.get(`/documentos/reportes/usuario/${usuarioId}/detalle`);
+    return response.data;
+  },
+};
