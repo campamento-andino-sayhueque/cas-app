@@ -1,6 +1,6 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { useAuth } from "../hooks/useAuth";
-import { Wallet, ChevronRight, Settings, Users, Backpack } from "lucide-react";
+import { Wallet, ChevronRight, Settings, Users, Backpack, FileText } from "lucide-react";
 import { FamiliaWidget } from "../components/familia/FamiliaWidget";
 
 export const Route = createFileRoute("/_auth/dashboard")({
@@ -53,6 +53,30 @@ function DashboardComponent() {
             </div>
           </div>
           <ChevronRight className="w-5 h-5 text-teal-400 group-hover:translate-x-1 transition-transform" />
+        </Link>
+      </section>
+
+      {/* Documentación - visible para todos */}
+      <section className="space-y-3">
+        <h2 className="text-lg font-semibold text-muted-foreground">Documentación</h2>
+        <Link 
+          to="/documentos"
+          className="flex items-center justify-between p-4 border rounded-xl bg-gradient-to-r from-rose-50 to-pink-50 dark:from-rose-950/30 dark:to-pink-950/30 border-rose-200 dark:border-rose-800 hover:shadow-md transition-all group"
+        >
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-full bg-rose-100 dark:bg-rose-900 flex items-center justify-center">
+              <FileText className="w-6 h-6 text-rose-600 dark:text-rose-400" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-rose-900 dark:text-rose-100">
+                Mis Documentos
+              </h3>
+              <p className="text-sm text-rose-700 dark:text-rose-300">
+                Formularios y autorizaciones del campamento
+              </p>
+            </div>
+          </div>
+          <ChevronRight className="w-5 h-5 text-rose-400 group-hover:translate-x-1 transition-transform" />
         </Link>
       </section>
 
