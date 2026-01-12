@@ -8,8 +8,8 @@
  */
 
 import { useState } from 'react';
-import { createFileRoute } from '@tanstack/react-router';
-import { FileText, BarChart3, Settings } from 'lucide-react';
+import { createFileRoute, Link } from '@tanstack/react-router';
+import { FileText, BarChart3, Settings, FilePen } from 'lucide-react';
 
 import { useAuth } from '../hooks/useAuth';
 import { useUsuarioActual } from '../hooks/useUsuarioActual';
@@ -61,11 +61,22 @@ function DocumentosPage() {
       <div className="container mx-auto px-4 py-8 max-w-6xl">
         {/* Header */}
         <header className="mb-8">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-orange-100 rounded-xl">
-              <FileText className="w-6 h-6 text-orange-600" />
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-orange-100 rounded-xl">
+                <FileText className="w-6 h-6 text-orange-600" />
+              </div>
+              <h1 className="text-2xl font-bold text-gray-900">Documentación</h1>
             </div>
-            <h1 className="text-2xl font-bold text-gray-900">Documentación</h1>
+            {puedeConfigurar && (
+              <Link
+                to="/template-editor"
+                className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 text-sm"
+              >
+                <FilePen className="w-4 h-4" />
+                Editor de Templates
+              </Link>
+            )}
           </div>
           <p className="text-gray-600">
             Completa los documentos requeridos para el campamento

@@ -51,7 +51,7 @@ function RootRouteComponent() {
     <>
       <Outlet />
       <TanStackRouterDevtools />
-      <ReactQueryDevtools />
+      {/*<ReactQueryDevtools />*/}
       <Toaster />
     </>
   );

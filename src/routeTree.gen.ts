@@ -14,6 +14,7 @@ import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthUsuariosRouteImport } from './routes/_auth.usuarios'
 import { Route as AuthTesoreriaRouteImport } from './routes/_auth.tesoreria'
+import { Route as AuthTemplateEditorRouteImport } from './routes/_auth.template-editor'
 import { Route as AuthPlanesRouteImport } from './routes/_auth.planes'
 import { Route as AuthPerfilRouteImport } from './routes/_auth.perfil'
 import { Route as AuthPagosRouteImport } from './routes/_auth.pagos'
@@ -46,6 +47,11 @@ const AuthUsuariosRoute = AuthUsuariosRouteImport.update({
 const AuthTesoreriaRoute = AuthTesoreriaRouteImport.update({
   id: '/tesoreria',
   path: '/tesoreria',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthTemplateEditorRoute = AuthTemplateEditorRouteImport.update({
+  id: '/template-editor',
+  path: '/template-editor',
   getParentRoute: () => AuthRoute,
 } as any)
 const AuthPlanesRoute = AuthPlanesRouteImport.update({
@@ -106,6 +112,7 @@ export interface FileRoutesByFullPath {
   '/pagos': typeof AuthPagosRoute
   '/perfil': typeof AuthPerfilRoute
   '/planes': typeof AuthPlanesRoute
+  '/template-editor': typeof AuthTemplateEditorRoute
   '/tesoreria': typeof AuthTesoreriaRoute
   '/usuarios': typeof AuthUsuariosRoute
 }
@@ -121,6 +128,7 @@ export interface FileRoutesByTo {
   '/pagos': typeof AuthPagosRoute
   '/perfil': typeof AuthPerfilRoute
   '/planes': typeof AuthPlanesRoute
+  '/template-editor': typeof AuthTemplateEditorRoute
   '/tesoreria': typeof AuthTesoreriaRoute
   '/usuarios': typeof AuthUsuariosRoute
 }
@@ -138,6 +146,7 @@ export interface FileRoutesById {
   '/_auth/pagos': typeof AuthPagosRoute
   '/_auth/perfil': typeof AuthPerfilRoute
   '/_auth/planes': typeof AuthPlanesRoute
+  '/_auth/template-editor': typeof AuthTemplateEditorRoute
   '/_auth/tesoreria': typeof AuthTesoreriaRoute
   '/_auth/usuarios': typeof AuthUsuariosRoute
 }
@@ -155,6 +164,7 @@ export interface FileRouteTypes {
     | '/pagos'
     | '/perfil'
     | '/planes'
+    | '/template-editor'
     | '/tesoreria'
     | '/usuarios'
   fileRoutesByTo: FileRoutesByTo
@@ -170,6 +180,7 @@ export interface FileRouteTypes {
     | '/pagos'
     | '/perfil'
     | '/planes'
+    | '/template-editor'
     | '/tesoreria'
     | '/usuarios'
   id:
@@ -186,6 +197,7 @@ export interface FileRouteTypes {
     | '/_auth/pagos'
     | '/_auth/perfil'
     | '/_auth/planes'
+    | '/_auth/template-editor'
     | '/_auth/tesoreria'
     | '/_auth/usuarios'
   fileRoutesById: FileRoutesById
@@ -231,6 +243,13 @@ declare module '@tanstack/react-router' {
       path: '/tesoreria'
       fullPath: '/tesoreria'
       preLoaderRoute: typeof AuthTesoreriaRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/template-editor': {
+      id: '/_auth/template-editor'
+      path: '/template-editor'
+      fullPath: '/template-editor'
+      preLoaderRoute: typeof AuthTemplateEditorRouteImport
       parentRoute: typeof AuthRoute
     }
     '/_auth/planes': {
@@ -309,6 +328,7 @@ interface AuthRouteChildren {
   AuthPagosRoute: typeof AuthPagosRoute
   AuthPerfilRoute: typeof AuthPerfilRoute
   AuthPlanesRoute: typeof AuthPlanesRoute
+  AuthTemplateEditorRoute: typeof AuthTemplateEditorRoute
   AuthTesoreriaRoute: typeof AuthTesoreriaRoute
   AuthUsuariosRoute: typeof AuthUsuariosRoute
 }
@@ -323,6 +343,7 @@ const AuthRouteChildren: AuthRouteChildren = {
   AuthPagosRoute: AuthPagosRoute,
   AuthPerfilRoute: AuthPerfilRoute,
   AuthPlanesRoute: AuthPlanesRoute,
+  AuthTemplateEditorRoute: AuthTemplateEditorRoute,
   AuthTesoreriaRoute: AuthTesoreriaRoute,
   AuthUsuariosRoute: AuthUsuariosRoute,
 }

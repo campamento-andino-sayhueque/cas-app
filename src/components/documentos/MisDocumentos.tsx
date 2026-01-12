@@ -5,10 +5,12 @@
  * Permite ver el estado de cada documento y acceder a completarlo.
  */
 
-import { FileText, Check, Clock, AlertCircle, ChevronRight, Upload, AlertTriangle } from 'lucide-react';
+import { useState } from 'react';
+import { FileText, Check, Clock, AlertCircle, ChevronRight, Upload, AlertTriangle, Download } from 'lucide-react';
 import { useDocumentosUsuario } from '../../hooks/useDocumentos';
 import { useUsuarioActual } from '../../hooks/useUsuarioActual';
 import { ESTADO_CONFIG, type DocumentoCompletado } from '../../api/schemas/documentos';
+import { FichaMedicaPdfView } from './FichaMedicaPdfView';
 
 interface MisDocumentosProps {
   onSelectDocumento?: (tipoDocumentoId: number, usuarioId: number) => void;
@@ -17,6 +19,7 @@ interface MisDocumentosProps {
 export function MisDocumentos({ onSelectDocumento }: MisDocumentosProps) {
   const { data: usuario } = useUsuarioActual();
   const { documentos, cargando, error } = useDocumentosUsuario(usuario?.id || 0);
+  const [pdfDocumento, setPdfDocumento] = useState<DocumentoCompletado | null>(null);
 
   if (!usuario) {
     return (
@@ -52,8 +55,23 @@ export function MisDocumentos({ onSelectDocumento }: MisDocumentosProps) {
 
   const porcentaje = stats.total > 0 ? Math.round((stats.completos / stats.total) * 100) : 0;
 
+  const handleOpenPdf = (doc: DocumentoCompletado) => {
+    if (doc.tipoDocumentoCodigo === 'FICHA_MEDICA' && doc.id !== null) {
+      setPdfDocumento(doc);
+    }
+  };
+
   return (
     <div className="space-y-6">
+      {/* Modal de PDF */}
+      {pdfDocumento && usuario && (
+        <FichaMedicaPdfView
+          documento={pdfDocumento}
+          usuario={usuario}
+          onClose={() => setPdfDocumento(null)}
+        />
+      )}
+
       {/* Resumen */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
         <div className="flex items-center justify-between mb-4">
@@ -138,6 +156,7 @@ export function MisDocumentos({ onSelectDocumento }: MisDocumentosProps) {
               key={doc.tipoDocumentoId}
               documento={doc}
               onClick={() => onSelectDocumento?.(doc.tipoDocumentoId, usuario.id)}
+              onDownload={() => handleOpenPdf(doc)}
             />
           ))}
         </div>
@@ -149,9 +168,10 @@ export function MisDocumentos({ onSelectDocumento }: MisDocumentosProps) {
 interface DocumentoItemProps {
   documento: DocumentoCompletado;
   onClick?: () => void;
+  onDownload?: () => void;
 }
 
-function DocumentoItem({ documento, onClick }: DocumentoItemProps) {
+function DocumentoItem({ documento, onClick, onDownload }: DocumentoItemProps) {
   const estado = documento.estado;
   const config = estado ? ESTADO_CONFIG[estado] : null;
 
@@ -186,28 +206,44 @@ function DocumentoItem({ documento, onClick }: DocumentoItemProps) {
     );
   };
 
-  return (
-    <button
-      onClick={onClick}
-      className="w-full flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors text-left"
-    >
-      <div className="flex-shrink-0">
-        {getIcon()}
-      </div>
+  const canDownload = documento.id !== null && documento.tipoDocumentoCodigo === 'FICHA_MEDICA';
 
-      <div className="flex-1 min-w-0">
+  return (
+    <div className="w-full flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors group">
+      <button
+        onClick={onClick}
+        className="flex-shrink-0"
+      >
+        {getIcon()}
+      </button>
+
+      <button
+        onClick={onClick}
+        className="flex-1 min-w-0 text-left"
+      >
         <h4 className="font-medium text-gray-900 truncate">{documento.tipoDocumentoNombre}</h4>
         <p className="text-sm text-gray-500">
           {documento.camposCompletados}/{documento.camposObligatorios} campos •{' '}
           {documento.adjuntosSubidos}/{documento.adjuntosRequeridos} adjuntos
         </p>
-      </div>
+      </button>
 
       <div className="flex items-center gap-3">
+        {canDownload && (
+          <button
+            onClick={onDownload}
+            className="p-2 text-gray-400 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-all"
+            title="Generar PDF para firmar"
+          >
+            <Download className="w-5 h-5" />
+          </button>
+        )}
         {getStatusBadge()}
-        <ChevronRight className="w-4 h-4 text-gray-400" />
+        <button onClick={onClick}>
+          <ChevronRight className="w-4 h-4 text-gray-400" />
+        </button>
       </div>
-    </button>
+    </div>
   );
 }
 

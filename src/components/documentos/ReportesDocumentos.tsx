@@ -6,11 +6,13 @@
  */
 
 import { useState, useMemo } from 'react';
-import { Users, CheckCircle, Clock, AlertTriangle, Search, ChevronDown } from 'lucide-react';
+import { Users, CheckCircle, Clock, AlertTriangle, Search, ChevronDown, Printer, Loader2 } from 'lucide-react';
 import { useReporteDocumentosGeneral, useReporteDocumentosGrupo } from '../../hooks/useDocumentos';
 import { useGruposAcampantes } from '../../hooks/useGrupos';
 import { useAuth } from '../../hooks/useAuth';
-import type { ResumenDocumentosMiembro } from '../../api/schemas/documentos';
+import type { ResumenDocumentosMiembro, DocumentoCompletado } from '../../api/schemas/documentos';
+import { FichaMedicaBulkPrint } from './FichaMedicaBulkPrint';
+import { documentosService } from '../../api/services/documentos';
 
 interface ReportesDocumentosProps {
   onSelectUsuario?: (usuarioId: number, usuarioNombre?: string) => void;
@@ -34,6 +36,14 @@ export function ReportesDocumentos({ onSelectUsuario }: ReportesDocumentosProps)
     esSecretario ? undefined : gruposKeycloak[0]?.id
   );
   const [busqueda, setBusqueda] = useState('');
+  
+  // Estado para impresión masiva
+  const [mostrarBulkPrint, setMostrarBulkPrint] = useState(false);
+  const [cargandoBulk, setCargandoBulk] = useState(false);
+  const [documentosBulk, setDocumentosBulk] = useState<Array<{
+    documento: DocumentoCompletado;
+    usuario: { id: number; nombreMostrar: string; dni?: string | null; fechaNacimiento?: string | null; direccion?: string | null; localidad?: string | null; telefono?: string | null; email: string };
+  }>>([]);
 
   // Usar reporte general para secretario, o reporte de grupo para dirigentes
   const { reporte: reporteGeneral, cargando: cargandoGeneral } = useReporteDocumentosGeneral();
@@ -49,6 +59,48 @@ export function ReportesDocumentos({ onSelectUsuario }: ReportesDocumentosProps)
     u.usuarioEmail?.toLowerCase().includes(busqueda.toLowerCase())
   ) || [];
 
+  // Cargar documentos para impresión masiva
+  const handleBulkPrint = async () => {
+    if (!reporte?.detalleUsuarios) return;
+    
+    setCargandoBulk(true);
+    try {
+      const docs: typeof documentosBulk = [];
+      
+      // Cargar documentos de cada usuario que tenga documentos completos
+      for (const usuario of reporte.detalleUsuarios) {
+        if (usuario.documentosCompletos === 0) continue;
+        
+        const documentosUsuario = await documentosService.getDetalleDocumentosUsuario(usuario.usuarioId);
+        const fichaMedica = documentosUsuario.find(d => d.tipoDocumentoCodigo === 'FICHA_MEDICA' && d.id !== null);
+        
+        if (fichaMedica) {
+          docs.push({
+            documento: fichaMedica,
+            usuario: {
+              id: usuario.usuarioId,
+              nombreMostrar: usuario.usuarioNombre || 'Sin nombre',
+              email: usuario.usuarioEmail || '',
+              dni: null,
+              fechaNacimiento: null,
+              direccion: null,
+              localidad: null,
+              telefono: null,
+            }
+          });
+        }
+      }
+      
+      setDocumentosBulk(docs);
+      setMostrarBulkPrint(true);
+    } catch (error) {
+      console.error('Error cargando documentos:', error);
+      alert('Error al cargar documentos para impresión');
+    } finally {
+      setCargandoBulk(false);
+    }
+  };
+
   if (cargando || cargandoGrupos) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -59,6 +111,30 @@ export function ReportesDocumentos({ onSelectUsuario }: ReportesDocumentosProps)
 
   return (
     <div className="space-y-6">
+      {/* Modal de impresión masiva */}
+      {mostrarBulkPrint && (
+        <FichaMedicaBulkPrint
+          documentos={documentosBulk}
+          onClose={() => setMostrarBulkPrint(false)}
+        />
+      )}
+
+      {/* Botón de impresión masiva */}
+      <div className="flex justify-end">
+        <button
+          onClick={handleBulkPrint}
+          disabled={cargandoBulk}
+          className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 disabled:opacity-50"
+        >
+          {cargandoBulk ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <Printer className="w-4 h-4" />
+          )}
+          Imprimir todas las fichas médicas
+        </button>
+      </div>
+
       {/* Estadísticas generales */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard

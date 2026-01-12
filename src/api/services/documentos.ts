@@ -148,6 +148,7 @@ export const documentosService = {
     return response.data;
   },
 
+
   // ========================================
   // Reportes (Dirigentes/Secretario)
   // ========================================
