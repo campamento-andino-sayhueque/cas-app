@@ -54,12 +54,10 @@ export const Route = createFileRoute('/_auth/template-editor')({
 function TemplateEditorPage() {
   const navigate = useNavigate();
   const [saved, setSaved] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+
 
   const handleSave = async (config: TemplateConfig) => {
-    setSaving(true);
-    setError(null);
+
     
     try {
       await pdfTemplatesService.guardar(config);
@@ -68,9 +66,7 @@ function TemplateEditorPage() {
       console.log('Template guardado en backend:', config.codigo);
     } catch (err) {
       console.error('Error guardando template:', err);
-      setError('Error al guardar el template');
-    } finally {
-      setSaving(false);
+
     }
   };
 
