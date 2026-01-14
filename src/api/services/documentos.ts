@@ -63,10 +63,12 @@ export const documentosService = {
   },
 
   /**
-   * Desactiva un tipo de documento (solo admin)
+   * Elimina un tipo de documento (solo admin)
+   * Puede ser una eliminación física o solo desactivación si posee documentos asociados.
    */
-  desactivarTipoDocumento: async (id: number): Promise<void> => {
-    await client.delete(`/tipos-documento/${id}`);
+  desactivarTipoDocumento: async (id: number): Promise<{ fisico: boolean; mensaje: string }> => {
+    const response = await client.delete(`/tipos-documento/${id}`);
+    return response.data;
   },
 
   // ========================================
@@ -174,6 +176,35 @@ export const documentosService = {
    */
   getDetalleDocumentosUsuario: async (usuarioId: number): Promise<DocumentoCompletado[]> => {
     const response = await client.get(`/documentos/reportes/usuario/${usuarioId}/detalle`);
+    return response.data;
+  },
+
+  /**
+   * Obtiene los datos necesarios para generar un PDF (template + datos del usuario + respuestas)
+   */
+  getPdfData: async (tipoDocumentoId: number, usuarioId: number): Promise<{
+    template: {
+      id: number;
+      codigo: string;
+      nombre: string;
+      pdfBase64: string;
+      pageWidth: number;
+      pageHeight: number;
+      campos: Array<{
+        codigo: string;
+        nombre: string;
+        x: number;
+        y: number;
+        fontSize: number;
+        tipo: string;
+        valorFijo?: string;
+      }>;
+    };
+    datos: Record<string, unknown>;
+    documentoExiste: boolean;
+    nombreUsuario: string;
+  }> => {
+    const response = await client.get(`/documentos/tipo/${tipoDocumentoId}/usuario/${usuarioId}/pdf-data`);
     return response.data;
   },
 };

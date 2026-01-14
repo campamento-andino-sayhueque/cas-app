@@ -34,23 +34,29 @@ export async function generarPdfDesdeTemplate(
   
   // Escribir cada campo
   for (const campo of template.campos) {
-    const valor = datos[campo.codigo];
-    if (valor === undefined || valor === null) continue;
+    let texto: string | null = null;
 
-    if (campo.tipo === 'checkbox') {
+    if (campo.tipo === 'marker') {
+      // Marcadores siempre se dibujan (usando X para ambos, la diferencia es visual en el editor)
+      texto = 'X';
+    } else if (campo.tipo === 'fijo' || campo.valorFijo) {
+      // Campos con valor fijo
+      texto = campo.valorFijo || '';
+    } else if (campo.tipo === 'checkbox') {
       // Para checkboxes, dibujar una X si es true
+      const valor = datos[campo.codigo];
       if (valor === true || valor === 'true' || valor === 'Sí') {
-        firstPage.drawText('X', {
-          x: campo.x,
-          y: campo.y,
-          size: campo.fontSize,
-          font,
-          color: rgb(0, 0, 0),
-        });
+        texto = 'X';
       }
     } else {
-      // Texto normal
-      const texto = String(valor);
+      // Texto normal desde datos
+      const valor = datos[campo.codigo];
+      if (valor !== undefined && valor !== null) {
+        texto = String(valor);
+      }
+    }
+
+    if (texto) {
       firstPage.drawText(texto, {
         x: campo.x,
         y: campo.y,

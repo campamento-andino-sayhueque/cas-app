@@ -6,7 +6,7 @@
  */
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Upload, Save, Trash2, Type } from 'lucide-react';
+import { Upload, Save, Trash2, Type, Check, X, User, Crosshair, FileText } from 'lucide-react';
 import * as pdfjsLib from 'pdfjs-dist';
 import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 
@@ -19,7 +19,8 @@ export interface CampoTemplate {
   x: number;
   y: number;
   fontSize: number;
-  tipo: 'texto' | 'checkbox' | 'fecha';
+  tipo: 'texto' | 'checkbox' | 'fecha' | 'marker' | 'fijo';
+  valorFijo?: string; // Para campos con valor predefinido
 }
 
 export interface TemplateConfig {
@@ -34,7 +35,7 @@ export interface TemplateConfig {
 interface PdfTemplateEditorProps {
   onSave: (config: TemplateConfig) => void;
   initialConfig?: TemplateConfig;
-  camposDisponibles: Array<{ codigo: string; nombre: string; tipo: 'texto' | 'checkbox' | 'fecha' }>;
+  camposDisponibles: Array<{ codigo: string; nombre: string; tipo: 'texto' | 'checkbox' | 'fecha' | 'marker' | 'fijo'; categoria: 'SISTEMA' | 'MARCADOR' | 'FIJO' | 'FORMULARIO' }>;
 }
 
 export function PdfTemplateEditor({ onSave, initialConfig, camposDisponibles }: PdfTemplateEditorProps) {
@@ -49,6 +50,7 @@ export function PdfTemplateEditor({ onSave, initialConfig, camposDisponibles }: 
   const [nombreTemplate, setNombreTemplate] = useState(initialConfig?.nombre || '');
   const [codigoTemplate, setCodigoTemplate] = useState(initialConfig?.codigo || '');
   const [scale, setScale] = useState(1);
+  const [textoFijo, setTextoFijo] = useState('');
 
   // Cargar PDF cuando cambia pdfBase64
   useEffect(() => {
@@ -143,16 +145,27 @@ export function PdfTemplateEditor({ onSave, initialConfig, camposDisponibles }: 
       if (existing) {
         return prev.map(c => c.codigo === campoSeleccionado ? { ...c, x, y } : c);
       }
+      
+      // Capturar textoFijo antes de limpiar
+      const valorParaGuardar = campoInfo.tipo === 'fijo' ? textoFijo : undefined;
+      
       return [...prev, {
-        codigo: campoSeleccionado,
-        nombre: campoInfo.nombre,
+        codigo: campoInfo.tipo === 'fijo' ? `fijo_${Date.now()}` : campoSeleccionado,
+        nombre: campoInfo.tipo === 'fijo' ? (textoFijo || 'Texto') : campoInfo.nombre,
         x,
         y,
         fontSize: 10,
-        tipo: campoInfo.tipo
+        tipo: campoInfo.tipo,
+        valorFijo: valorParaGuardar
       }];
     });
-  }, [campoSeleccionado, scale, pageInfo.height, camposDisponibles]);
+    
+    // Limpiar texto fijo y deseleccionar después de agregar
+    if (campoInfo.tipo === 'fijo') {
+      setTextoFijo('');
+      setCampoSeleccionado(null);
+    }
+  }, [campoSeleccionado, scale, pageInfo.height, camposDisponibles, textoFijo]);
 
   const handleRemoveCampo = (codigo: string) => {
     setCampos(prev => prev.filter(c => c.codigo !== codigo));
@@ -214,37 +227,178 @@ export function PdfTemplateEditor({ onSave, initialConfig, camposDisponibles }: 
           <h3 className="font-semibold text-sm text-gray-700 mb-3">Campos disponibles</h3>
           <p className="text-xs text-gray-500 mb-3">Seleccioná un campo y hacé click en el PDF para posicionarlo</p>
           
-          <div className="space-y-1">
-            {camposDisponibles.map(campo => {
-              const posicionado = campos.find(c => c.codigo === campo.codigo);
-              return (
-                <div
-                  key={campo.codigo}
-                  onClick={() => setCampoSeleccionado(campo.codigo)}
-                  className={`flex items-center justify-between p-2 rounded-lg cursor-pointer text-sm ${
-                    campoSeleccionado === campo.codigo
-                      ? 'bg-orange-100 border border-orange-300'
-                      : posicionado
-                        ? 'bg-green-50 border border-green-200'
-                        : 'bg-gray-50 hover:bg-gray-100'
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <Type className="w-3 h-3 text-gray-400" />
-                    <span>{campo.nombre}</span>
+          {/* Campos del Sistema */}
+          <div className="mb-4">
+            <div className="flex items-center gap-2 text-xs font-medium text-blue-700 mb-2">
+              <User className="w-3 h-3" />
+              <span>Datos del Sistema</span>
+            </div>
+            <div className="space-y-1">
+              {camposDisponibles.filter(c => c.categoria === 'SISTEMA').map(campo => {
+                const posicionado = campos.find(c => c.codigo === campo.codigo);
+                return (
+                  <div
+                    key={campo.codigo}
+                    onClick={() => setCampoSeleccionado(campo.codigo)}
+                    className={`flex items-center justify-between p-2 rounded-lg cursor-pointer text-sm ${
+                      campoSeleccionado === campo.codigo
+                        ? 'bg-blue-100 border border-blue-300'
+                        : posicionado
+                          ? 'bg-green-50 border border-green-200'
+                          : 'bg-gray-50 hover:bg-gray-100'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Type className="w-3 h-3 text-gray-400" />
+                      <span>{campo.nombre}</span>
+                    </div>
+                    {posicionado && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleRemoveCampo(campo.codigo); }}
+                        className="p-1 text-red-500 hover:bg-red-100 rounded"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    )}
                   </div>
-                  {posicionado && (
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Marcadores Visuales */}
+          <div className="mb-4">
+            <div className="flex items-center gap-2 text-xs font-medium text-purple-700 mb-2">
+              <Crosshair className="w-3 h-3" />
+              <span>Marcadores</span>
+            </div>
+            <div className="space-y-1">
+              {camposDisponibles.filter(c => c.categoria === 'MARCADOR').map(campo => {
+                const posicionado = campos.find(c => c.codigo === campo.codigo);
+                const isCheck = campo.codigo === 'marker_check';
+                return (
+                  <div
+                    key={campo.codigo}
+                    onClick={() => setCampoSeleccionado(campo.codigo)}
+                    className={`flex items-center justify-between p-2 rounded-lg cursor-pointer text-sm ${
+                      campoSeleccionado === campo.codigo
+                        ? 'bg-purple-100 border border-purple-300'
+                        : posicionado
+                          ? 'bg-green-50 border border-green-200'
+                          : 'bg-gray-50 hover:bg-gray-100'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      {isCheck ? (
+                        <Check className="w-3 h-3 text-green-600" />
+                      ) : (
+                        <X className="w-3 h-3 text-red-600" />
+                      )}
+                      <span>{campo.nombre}</span>
+                    </div>
+                    {posicionado && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleRemoveCampo(campo.codigo); }}
+                        className="p-1 text-red-500 hover:bg-red-100 rounded"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Texto Fijo */}
+          <div className="mb-4">
+            <div className="flex items-center gap-2 text-xs font-medium text-orange-700 mb-2">
+              <Type className="w-3 h-3" />
+              <span>Texto Fijo</span>
+            </div>
+            <input
+              type="text"
+              value={textoFijo}
+              onChange={(e) => setTextoFijo(e.target.value)}
+              placeholder="Escribí un texto..."
+              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg mb-2 focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+            />
+            {camposDisponibles.filter(c => c.categoria === 'FIJO').map(campo => (
+              <div
+                key={campo.codigo}
+                onClick={() => textoFijo && setCampoSeleccionado(campo.codigo)}
+                className={`flex items-center justify-between p-2 rounded-lg text-sm ${
+                  campoSeleccionado === campo.codigo && textoFijo
+                    ? 'bg-orange-100 border border-orange-300 cursor-pointer'
+                    : textoFijo
+                      ? 'bg-gray-50 hover:bg-gray-100 cursor-pointer'
+                      : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Type className="w-3 h-3" />
+                  <span>{textoFijo || 'Ingrese texto primero'}</span>
+                </div>
+              </div>
+            ))}
+            {/* Mostrar textos fijos agregados */}
+            {campos.filter(c => c.tipo === 'fijo').length > 0 && (
+              <div className="mt-2 space-y-1">
+                {campos.filter(c => c.tipo === 'fijo').map(c => (
+                  <div key={c.codigo} className="flex items-center justify-between p-2 bg-green-50 border border-green-200 rounded-lg text-sm">
+                    <span className="truncate">{c.valorFijo || c.nombre || '(sin texto)'}</span>
                     <button
-                      onClick={(e) => { e.stopPropagation(); handleRemoveCampo(campo.codigo); }}
+                      onClick={() => handleRemoveCampo(c.codigo)}
                       className="p-1 text-red-500 hover:bg-red-100 rounded"
                     >
                       <Trash2 className="w-3 h-3" />
                     </button>
-                  )}
-                </div>
-              );
-            })}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
+
+          {/* Campos del Formulario */}
+          {camposDisponibles.filter(c => c.categoria === 'FORMULARIO').length > 0 && (
+            <div className="mb-4">
+              <div className="flex items-center gap-2 text-xs font-medium text-emerald-700 mb-2">
+                <FileText className="w-3 h-3" />
+                <span>Campos del Formulario</span>
+              </div>
+              <div className="space-y-1">
+                {camposDisponibles.filter(c => c.categoria === 'FORMULARIO').map(campo => {
+                  const posicionado = campos.find(c => c.codigo === campo.codigo);
+                  return (
+                    <div
+                      key={campo.codigo}
+                      onClick={() => setCampoSeleccionado(campo.codigo)}
+                      className={`flex items-center justify-between p-2 rounded-lg cursor-pointer text-sm ${
+                        campoSeleccionado === campo.codigo
+                          ? 'bg-emerald-100 border border-emerald-300'
+                          : posicionado
+                            ? 'bg-green-50 border border-green-200'
+                            : 'bg-gray-50 hover:bg-gray-100'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Type className="w-3 h-3 text-emerald-500" />
+                        <span className="truncate">{campo.nombre.replace('[Formulario] ', '')}</span>
+                      </div>
+                      {posicionado && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleRemoveCampo(campo.codigo); }}
+                          className="p-1 text-red-500 hover:bg-red-100 rounded"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Campos posicionados */}
           {campos.length > 0 && (

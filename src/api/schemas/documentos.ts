@@ -19,7 +19,7 @@ import {
 // Enums
 // ============================================
 
-export const AudienciaDocumentoSchema = picklist(['MENOR_18', 'MAYOR_18', 'TODOS']);
+export const AudienciaDocumentoSchema = picklist(['ACAMPANTE', 'DIRIGENTE', 'PADRE', 'TODOS']);
 export type AudienciaDocumento = InferOutput<typeof AudienciaDocumentoSchema>;
 
 export const EstadoDocumentoSchema = picklist(['BORRADOR', 'PENDIENTE_ADJUNTOS', 'PENDIENTE_FISICO', 'COMPLETO']);
@@ -67,12 +67,15 @@ export const TipoDocumentoSchema = object({
   codigo: string(),
   nombre: string(),
   descripcion: nullable(string()),
-  audiencia: AudienciaDocumentoSchema,
+  audiencias: array(AudienciaDocumentoSchema),
   activo: boolean(),
   requiereFirma: boolean(),
   ordenVisualizacion: number(),
   campos: array(CampoFormularioSchema),
   adjuntosRequeridos: array(AdjuntoRequeridoSchema),
+  // Template PDF asociado (opcional)
+  pdfTemplateId: optional(nullable(number())),
+  pdfTemplateCodigo: optional(nullable(string())),
 });
 
 export type TipoDocumento = InferOutput<typeof TipoDocumentoSchema>;
@@ -210,7 +213,7 @@ export const CrearTipoDocumentoRequestSchema = object({
   codigo: string(),
   nombre: string(),
   descripcion: optional(nullable(string())),
-  audiencia: AudienciaDocumentoSchema,
+  audiencias: array(AudienciaDocumentoSchema),
   activo: optional(boolean()),
   requiereFirma: optional(boolean()),
   ordenVisualizacion: optional(number()),

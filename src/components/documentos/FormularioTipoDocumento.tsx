@@ -5,7 +5,7 @@
  * Permite configurar datos generales, campos y adjuntos.
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   X,
   Save,
@@ -18,6 +18,7 @@ import {
   FileText,
   Settings,
   Paperclip,
+  FilePen,
 } from 'lucide-react';
 import { useActualizarTipoDocumento, useCrearTipoDocumento } from '../../hooks/useDocumentos';
 import type {
@@ -27,6 +28,7 @@ import type {
   CampoRequest,
   AdjuntoRequest,
 } from '../../api/schemas/documentos';
+import { pdfTemplatesService, type PdfTemplateResponse } from '../../api/services/pdfTemplates';
 
 interface FormularioTipoDocumentoProps {
   tipoDocumento?: TipoDocumento; // Si es undefined, es creación
@@ -48,10 +50,11 @@ const TIPOS_CAMPO: { value: TipoCampo; label: string }[] = [
   { value: 'BOOLEAN', label: 'Checkbox' },
 ];
 
-const AUDIENCIAS: { value: AudienciaDocumento; label: string }[] = [
-  { value: 'TODOS', label: 'Todos' },
-  { value: 'MENOR_18', label: 'Menores de 18' },
-  { value: 'MAYOR_18', label: 'Mayores de 18' },
+const AUDIENCIAS: { value: AudienciaDocumento; label: string; icon: string; color: string }[] = [
+  { value: 'ACAMPANTE', label: 'Acampantes', icon: '🏕️', color: 'purple' },
+  { value: 'DIRIGENTE', label: 'Dirigentes', icon: '🧭', color: 'teal' },
+  { value: 'PADRE', label: 'Padres', icon: '👨‍👩‍👧', color: 'amber' },
+  { value: 'TODOS', label: 'Todos', icon: '🌐', color: 'blue' },
 ];
 
 export function FormularioTipoDocumento({
@@ -71,9 +74,16 @@ export function FormularioTipoDocumento({
   const [codigo, setCodigo] = useState(tipoDocumento?.codigo || '');
   const [nombre, setNombre] = useState(tipoDocumento?.nombre || '');
   const [descripcion, setDescripcion] = useState(tipoDocumento?.descripcion || '');
-  const [audiencia, setAudiencia] = useState<AudienciaDocumento>(tipoDocumento?.audiencia || 'TODOS');
+  const [audiencias, setAudiencias] = useState<AudienciaDocumento[]>(tipoDocumento?.audiencias || ['TODOS']);
   const [activo, setActivo] = useState(tipoDocumento?.activo ?? true);
   const [requiereFirma, setRequiereFirma] = useState(tipoDocumento?.requiereFirma ?? false);
+  const [pdfTemplateId, setPdfTemplateId] = useState<number | null>(tipoDocumento?.pdfTemplateId ?? null);
+  const [templatesDisponibles, setTemplatesDisponibles] = useState<PdfTemplateResponse[]>([]);
+
+  // Cargar templates disponibles
+  useEffect(() => {
+    pdfTemplatesService.listar().then(setTemplatesDisponibles).catch(console.error);
+  }, []);
 
   // Estado del formulario - Campos
   const [campos, setCampos] = useState<CampoRequest[]>(() =>
@@ -124,12 +134,13 @@ export function FormularioTipoDocumento({
       codigo: codigo.trim(),
       nombre: nombre.trim(),
       descripcion: descripcion.trim() || null,
-      audiencia,
+      audiencias,
       activo,
       requiereFirma,
       ordenVisualizacion: tipoDocumento?.ordenVisualizacion ?? 1,
       campos: campos.map((c, i) => ({ ...c, ordenVisualizacion: i })),
       adjuntos: adjuntos.map((a, i) => ({ ...a, ordenVisualizacion: i })),
+      pdfTemplateId: pdfTemplateId || null,
     };
 
     try {
@@ -283,13 +294,16 @@ export function FormularioTipoDocumento({
               setNombre={setNombre}
               descripcion={descripcion}
               setDescripcion={setDescripcion}
-              audiencia={audiencia}
-              setAudiencia={setAudiencia}
+              audiencias={audiencias}
+              setAudiencias={setAudiencias}
               activo={activo}
               setActivo={setActivo}
               requiereFirma={requiereFirma}
               setRequiereFirma={setRequiereFirma}
               esEdicion={esEdicion}
+              pdfTemplateId={pdfTemplateId}
+              setPdfTemplateId={setPdfTemplateId}
+              templatesDisponibles={templatesDisponibles}
             />
           )}
 
@@ -351,13 +365,16 @@ interface TabGeneralProps {
   setNombre: (v: string) => void;
   descripcion: string;
   setDescripcion: (v: string) => void;
-  audiencia: AudienciaDocumento;
-  setAudiencia: (v: AudienciaDocumento) => void;
+  audiencias: AudienciaDocumento[];
+  setAudiencias: (v: AudienciaDocumento[]) => void;
   activo: boolean;
   setActivo: (v: boolean) => void;
   requiereFirma: boolean;
   setRequiereFirma: (v: boolean) => void;
   esEdicion: boolean;
+  pdfTemplateId: number | null;
+  setPdfTemplateId: (v: number | null) => void;
+  templatesDisponibles: PdfTemplateResponse[];
 }
 
 function TabGeneral({
@@ -367,13 +384,16 @@ function TabGeneral({
   setNombre,
   descripcion,
   setDescripcion,
-  audiencia,
-  setAudiencia,
+  audiencias,
+  setAudiencias,
   activo,
   setActivo,
   requiereFirma,
   setRequiereFirma,
   esEdicion,
+  pdfTemplateId,
+  setPdfTemplateId,
+  templatesDisponibles,
 }: TabGeneralProps) {
   return (
     <div className="space-y-6 max-w-2xl">
@@ -423,21 +443,55 @@ function TabGeneral({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Audiencia
+        <div className="col-span-1 md:col-span-2">
+          <label className="block text-sm font-medium text-gray-700 mb-3">
+            ¿Quién debe completar este documento?
+            <span className="text-red-500 ml-1">*</span>
           </label>
-          <select
-            value={audiencia}
-            onChange={(e) => setAudiencia(e.target.value as AudienciaDocumento)}
-            className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-          >
-            {AUDIENCIAS.map((a) => (
-              <option key={a.value} value={a.value}>
-                {a.label}
-              </option>
-            ))}
-          </select>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {AUDIENCIAS.map((a) => {
+              const isSelected = audiencias.includes(a.value);
+              const colorClasses = {
+                purple: isSelected ? 'bg-purple-50 border-purple-300 ring-2 ring-purple-200' : 'border-gray-200 hover:border-purple-200 hover:bg-purple-50/50',
+                teal: isSelected ? 'bg-teal-50 border-teal-300 ring-2 ring-teal-200' : 'border-gray-200 hover:border-teal-200 hover:bg-teal-50/50',
+                amber: isSelected ? 'bg-amber-50 border-amber-300 ring-2 ring-amber-200' : 'border-gray-200 hover:border-amber-200 hover:bg-amber-50/50',
+                blue: isSelected ? 'bg-blue-50 border-blue-300 ring-2 ring-blue-200' : 'border-gray-200 hover:border-blue-200 hover:bg-blue-50/50',
+              }[a.color] || '';
+              
+              const textColor = {
+                purple: isSelected ? 'text-purple-700' : 'text-gray-600',
+                teal: isSelected ? 'text-teal-700' : 'text-gray-600',
+                amber: isSelected ? 'text-amber-700' : 'text-gray-600',
+                blue: isSelected ? 'text-blue-700' : 'text-gray-600',
+              }[a.color] || '';
+              
+              return (
+                <button 
+                  key={a.value}
+                  type="button"
+                  onClick={() => {
+                    if (isSelected) {
+                      setAudiencias(audiencias.filter(x => x !== a.value));
+                    } else {
+                      setAudiencias([...audiencias, a.value]);
+                    }
+                  }}
+                  className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all duration-200 ${colorClasses}`}
+                >
+                  <span className="text-2xl">{a.icon}</span>
+                  <span className={`text-sm font-medium ${textColor}`}>{a.label}</span>
+                  {isSelected && (
+                    <span className={`text-xs ${textColor} opacity-75`}>✓ Seleccionado</span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+          {audiencias.length === 0 && (
+            <p className="text-xs text-red-500 mt-2 flex items-center gap-1">
+              <span>⚠️</span> Selecciona al menos una audiencia
+            </p>
+          )}
         </div>
 
         <div className="space-y-3">
@@ -461,6 +515,27 @@ function TabGeneral({
             <span className="text-sm text-gray-700">Requiere firma</span>
           </label>
         </div>
+      </div>
+
+      {/* Selector de Template PDF */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          <FilePen className="w-4 h-4 inline mr-1" />
+          Template PDF
+        </label>
+        <select
+          value={pdfTemplateId ?? ''}
+          onChange={(e) => setPdfTemplateId(e.target.value ? Number(e.target.value) : null)}
+          className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+        >
+          <option value="">Sin template</option>
+          {templatesDisponibles.map((t) => (
+            <option key={t.id} value={t.id}>
+              {t.nombre} ({t.codigo})
+            </option>
+          ))}
+        </select>
+        <p className="text-xs text-gray-400 mt-1">Opcional: asociar un template para generar PDFs pre-llenados</p>
       </div>
     </div>
   );

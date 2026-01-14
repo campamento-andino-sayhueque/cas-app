@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Phone, MapPin, User, AlertTriangle, Loader2, ArrowLeft, ArrowRight, Check } from "lucide-react";
+import { Phone, MapPin, User, AlertTriangle, Loader2, ArrowLeft, ArrowRight, Check, CreditCard } from "lucide-react";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
 import { Input } from "../ui/input";
@@ -34,6 +34,7 @@ export function WizardCompletarPerfil({ usuario, onComplete, onSkip }: WizardCom
         telefono: usuario.telefono || "",
         direccion: usuario.direccion || "",
         localidad: usuario.localidad || "",
+        dni: usuario.dni || "",
         fechaNacimiento: usuario.fechaNacimiento || "",
         contactoEmergenciaNombre: usuario.contactoEmergenciaNombre || "",
         contactoEmergenciaTelefono: usuario.contactoEmergenciaTelefono || "",
@@ -64,7 +65,8 @@ export function WizardCompletarPerfil({ usuario, onComplete, onSkip }: WizardCom
         if (paso === 1) {
             // Teléfono es obligatorio para todos
             if (!formData.telefono?.trim()) return false;
-            // Para acampantes, fecha de nacimiento también es obligatoria
+            // Para acampantes, DNI y fecha de nacimiento también son obligatorios
+            if (esAcampante && !formData.dni?.trim()) return false;
             if (esAcampante && !formData.fechaNacimiento) return false;
             return true;
         }
@@ -153,19 +155,34 @@ export function WizardCompletarPerfil({ usuario, onComplete, onSkip }: WizardCom
                                 </div>
 
                                 {esAcampante && (
-                                    <div className="space-y-2">
-                                        <Label htmlFor="fechaNacimiento" className="flex items-center gap-2">
-                                            <User className="w-4 h-4" />
-                                            Fecha de nacimiento *
-                                        </Label>
-                                        <Input
-                                            id="fechaNacimiento"
-                                            type="date"
-                                            value={formData.fechaNacimiento}
-                                            onChange={(e) => updateField("fechaNacimiento", e.target.value)}
-                                            className="text-lg"
-                                        />
-                                    </div>
+                                    <>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="dni" className="flex items-center gap-2">
+                                                <CreditCard className="w-4 h-4" />
+                                                DNI *
+                                            </Label>
+                                            <Input
+                                                id="dni"
+                                                placeholder="Ej: 12345678"
+                                                value={formData.dni}
+                                                onChange={(e) => updateField("dni", e.target.value)}
+                                                className="text-lg"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="fechaNacimiento" className="flex items-center gap-2">
+                                                <User className="w-4 h-4" />
+                                                Fecha de nacimiento *
+                                            </Label>
+                                            <Input
+                                                id="fechaNacimiento"
+                                                type="date"
+                                                value={formData.fechaNacimiento}
+                                                onChange={(e) => updateField("fechaNacimiento", e.target.value)}
+                                                className="text-lg"
+                                            />
+                                        </div>
+                                    </>
                                 )}
                             </>
                         )}

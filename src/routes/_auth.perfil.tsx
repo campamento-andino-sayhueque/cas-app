@@ -21,7 +21,8 @@ import {
     Check, 
     X,
     User,
-    AlertCircle
+    AlertCircle,
+    CreditCard
 } from 'lucide-react';
 
 export const Route = createFileRoute('/_auth/perfil')({
@@ -239,6 +240,21 @@ function PerfilPage() {
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
+                        <CampoEditable
+                            label="DNI"
+                            valor={usuario.dni}
+                            campo="dni"
+                            icono={<CreditCard className="w-4 h-4" />}
+                            editando={editandoCampo === "dni"}
+                            valorEditado={valorEditado}
+                            onEditar={handleEditar}
+                            onGuardar={handleGuardar}
+                            onCancelar={handleCancelar}
+                            onChange={setValorEditado}
+                            isPending={actualizarPerfil.isPending}
+                            placeholder="Ej: 12345678"
+                        />
+                        <Separator />
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
                                 <Calendar className="w-4 h-4 text-muted-foreground" />

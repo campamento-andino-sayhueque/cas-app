@@ -6,16 +6,31 @@
  */
 
 import { useState } from 'react';
-import { FileText, Plus, ChevronDown, ChevronUp, Settings, Eye, Pencil } from 'lucide-react';
-import { useTiposDocumento } from '../../hooks/useDocumentos';
+import { FileText, Plus, ChevronDown, ChevronUp, Settings, Eye, Pencil, Trash2 } from 'lucide-react';
+import { useTiposDocumento, useDesactivarTipoDocumento } from '../../hooks/useDocumentos';
 import type { TipoDocumento, CampoFormulario } from '../../api/schemas/documentos';
 import { FormularioTipoDocumento } from './FormularioTipoDocumento';
 
 export function AdminDocumentos() {
   const { tipos, cargando, error, refetch } = useTiposDocumento();
+  const { desactivarTipoDocumento, cargando: eliminando } = useDesactivarTipoDocumento();
   const [expandedTipo, setExpandedTipo] = useState<number | null>(null);
   const [tipoEditar, setTipoEditar] = useState<TipoDocumento | null>(null);
   const [mostrarCrear, setMostrarCrear] = useState(false);
+
+  const handleEliminar = async (id: number, nombre: string) => {
+    if (window.confirm(`¿Estás seguro de que quieres eliminar el tipo de documento "${nombre}"?`)) {
+      try {
+        const resultado = await desactivarTipoDocumento(id);
+        if (resultado.mensaje) {
+          alert(resultado.mensaje);
+        }
+      } catch (err) {
+        alert('Error al eliminar el tipo de documento');
+        console.error(err);
+      }
+    }
+  };
 
   if (cargando) {
     return (
@@ -77,6 +92,8 @@ export function AdminDocumentos() {
               isExpanded={expandedTipo === tipo.id}
               onToggle={() => setExpandedTipo(expandedTipo === tipo.id ? null : tipo.id)}
               onEdit={() => setTipoEditar(tipo)}
+              onDelete={() => handleEliminar(tipo.id, tipo.nombre)}
+              isDeleting={eliminando}
             />
           ))
         )}
@@ -120,9 +137,11 @@ interface TipoDocumentoCardProps {
   isExpanded: boolean;
   onToggle: () => void;
   onEdit: () => void;
+  onDelete: () => void;
+  isDeleting?: boolean;
 }
 
-function TipoDocumentoCard({ tipo, isExpanded, onToggle, onEdit }: TipoDocumentoCardProps) {
+function TipoDocumentoCard({ tipo, isExpanded, onToggle, onEdit, onDelete, isDeleting }: TipoDocumentoCardProps) {
   // Agrupar campos por sección
   const seccionesMap = new Map<string, CampoFormulario[]>();
   tipo.campos.forEach((campo) => {
@@ -158,14 +177,20 @@ function TipoDocumentoCard({ tipo, isExpanded, onToggle, onEdit }: TipoDocumento
           }`}>
             {tipo.activo ? 'Activo' : 'Inactivo'}
           </span>
-          <span className={`px-2 py-1 text-xs rounded-full ${
-            tipo.audiencia === 'TODOS' ? 'bg-blue-100 text-blue-700' : 
-            tipo.audiencia === 'MENOR_18' ? 'bg-purple-100 text-purple-700' : 
-            'bg-teal-100 text-teal-700'
-          }`}>
-            {tipo.audiencia === 'TODOS' ? 'Todos' : 
-             tipo.audiencia === 'MENOR_18' ? 'Menores' : 'Mayores'}
-          </span>
+          <div className="flex gap-1 flex-wrap">
+            {tipo.audiencias.map((aud) => (
+              <span key={aud} className={`px-2 py-0.5 text-xs rounded-full ${
+                aud === 'TODOS' ? 'bg-blue-100 text-blue-700' : 
+                aud === 'ACAMPANTE' ? 'bg-purple-100 text-purple-700' : 
+                aud === 'DIRIGENTE' ? 'bg-teal-100 text-teal-700' :
+                'bg-amber-100 text-amber-700'
+              }`}>
+                {aud === 'TODOS' ? 'Todos' : 
+                 aud === 'ACAMPANTE' ? 'Acampantes' : 
+                 aud === 'DIRIGENTE' ? 'Dirigentes' : 'Padres'}
+              </span>
+            ))}
+          </div>
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -175,6 +200,17 @@ function TipoDocumentoCard({ tipo, isExpanded, onToggle, onEdit }: TipoDocumento
             title="Editar tipo de documento"
           >
             <Pencil className="w-4 h-4" />
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete();
+            }}
+            className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+            title="Eliminar tipo de documento"
+            disabled={isDeleting}
+          >
+            <Trash2 className="w-4 h-4" />
           </button>
           <button onClick={onToggle}>
             {isExpanded ? (

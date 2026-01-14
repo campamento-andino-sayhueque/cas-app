@@ -8,5 +8,6 @@ export { AdminDocumentos } from './AdminDocumentos';
 export { FormularioDocumento } from './FormularioDocumento';
 export { FormularioTipoDocumento } from './FormularioTipoDocumento';
 export { DetalleDocumentosUsuario } from './DetalleDocumentosUsuario';
+export { GenerarPdfModal } from './GenerarPdfModal';
 
 
